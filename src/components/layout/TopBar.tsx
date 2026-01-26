@@ -1,4 +1,4 @@
-import { Bell, Search, User, ChevronDown } from 'lucide-react';
+import { Bell, Search, User, ChevronDown, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -9,8 +9,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 export function TopBar() {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({
+      title: 'Logged out',
+      description: 'You have been successfully logged out.',
+    });
+    navigate('/auth');
+  };
+
   return (
     <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-full items-center justify-between px-6">
@@ -48,19 +63,23 @@ export function TopBar() {
                   <User className="h-4 w-4" />
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium">Jane Doe</p>
+                  <p className="text-sm font-medium">{profile?.name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">Cashier</p>
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 bg-popover">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Preferences</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem 
+                className="text-destructive cursor-pointer"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
