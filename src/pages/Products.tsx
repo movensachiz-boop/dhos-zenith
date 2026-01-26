@@ -8,14 +8,35 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { mockProducts, mockCategories } from '@/data/mockData';
+import { mockCategories } from '@/data/mockData';
 import { cn } from '@/lib/utils';
+import { Product } from '@/types';
+import { toast } from '@/hooks/use-toast';
+import AddProductDialog from '@/components/products/AddProductDialog';
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const filteredProducts = mockProducts.filter(product => {
+  const handleAddProduct = (newProduct: Product) => {
+    setProducts(prev => [...prev, newProduct]);
+    toast({
+      title: 'Product Added',
+      description: `${newProduct.name} has been added successfully.`,
+    });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    toast({
+      title: 'Product Deleted',
+      description: 'Product has been removed.',
+    });
+  };
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
@@ -30,11 +51,18 @@ export default function Products() {
           <h1 className="text-2xl font-bold">Products</h1>
           <p className="text-muted-foreground">Manage your product catalog</p>
         </div>
-        <Button variant="pos">
+        <Button variant="pos" onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="h-5 w-5 mr-2" />
           Add Product
         </Button>
       </div>
+
+      <AddProductDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onAddProduct={handleAddProduct}
+        categories={mockCategories}
+      />
 
       {/* Filters */}
       <div className="flex gap-4">
@@ -128,7 +156,10 @@ export default function Products() {
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
