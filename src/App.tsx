@@ -9,6 +9,7 @@ import POS from "./pages/POS";
 import Products from "./pages/Products";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
+import Help from "./pages/Help";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/invoices" element={<AppLayout><Placeholder /></AppLayout>} />
           <Route path="/audit" element={<AppLayout><Placeholder /></AppLayout>} />
           <Route path="/settings" element={<AppLayout><Placeholder /></AppLayout>} />
+          <Route path="/help" element={<AppLayout><Help /></AppLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -11,7 +11,8 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  Zap
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Invoices', href: '/invoices', icon: FileText },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Help', href: '/help', icon: HelpCircle },
 ];
 
 export function AppSidebar() {
