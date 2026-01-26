@@ -2,16 +2,58 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Products from "./pages/Products";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 import Help from "./pages/Help";
+import Auth from "./pages/Auth";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+      <Route path="/pos" element={<ProtectedRoute><AppLayout><POS /></AppLayout></ProtectedRoute>} />
+      <Route path="/products" element={<ProtectedRoute><AppLayout><Products /></AppLayout></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/clients" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/suppliers" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/transporters" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/audit" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -19,21 +61,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AppLayout><Dashboard /></AppLayout>} />
-          <Route path="/pos" element={<AppLayout><POS /></AppLayout>} />
-          <Route path="/products" element={<AppLayout><Products /></AppLayout>} />
-          <Route path="/inventory" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/clients" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/suppliers" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/transporters" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/reports" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/invoices" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/audit" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/settings" element={<AppLayout><Placeholder /></AppLayout>} />
-          <Route path="/help" element={<AppLayout><Help /></AppLayout>} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
