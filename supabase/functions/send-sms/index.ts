@@ -49,20 +49,28 @@ Deno.serve(async (req) => {
     // Format phone number (ensure it has + prefix)
     const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
 
-    // Send SMS via Infobip
-    const infobipUrl = `https://${cleanBaseUrl}/sms/2/text/advanced`;
+    // Send WhatsApp message via Infobip
+    const infobipUrl = `https://${cleanBaseUrl}/whatsapp/1/message/template`;
     
-    const smsPayload = {
+    const whatsappPayload = {
       messages: [
         {
-          destinations: [{ to: formattedPhone }],
-          from: "DHOS",
-          text: `Your DHOS verification code is: ${otp}. This code expires in 10 minutes.`,
-        },
-      ],
+          from: "447860099299", // Infobip WhatsApp sender number - update if you have a different one
+          to: formattedPhone,
+          content: {
+            templateName: "otp_verification",
+            templateData: {
+              body: {
+                placeholders: [otp]
+              }
+            },
+            language: "en"
+          }
+        }
+      ]
     };
 
-    console.log("Sending SMS to:", formattedPhone);
+    console.log("Sending WhatsApp OTP to:", formattedPhone);
     console.log("Using Infobip URL:", infobipUrl);
     console.log("API Key length:", cleanApiKey.length);
 
@@ -73,7 +81,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
-      body: JSON.stringify(smsPayload),
+      body: JSON.stringify(whatsappPayload),
     });
 
     const result = await response.json();
@@ -89,7 +97,7 @@ Deno.serve(async (req) => {
 
     // Check if message was accepted
     const messageStatus = result.messages?.[0]?.status;
-    console.log("SMS sent successfully, status:", messageStatus);
+    console.log("WhatsApp message sent successfully, status:", messageStatus);
     
     return new Response(
       JSON.stringify({ success: true, messageId: result.messages?.[0]?.messageId, status: messageStatus }),
