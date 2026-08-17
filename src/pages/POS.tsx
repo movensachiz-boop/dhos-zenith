@@ -45,7 +45,7 @@ export default function POS() {
   // Customer details
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerNumber, setCustomerNumber] = useState('');
+  
   const [referralCode, setReferralCode] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
 
