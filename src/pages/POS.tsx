@@ -540,7 +540,7 @@ export default function POS() {
           {customerName && (
             <p className="text-xs text-muted-foreground">
               Customer: <span className="font-medium text-foreground">{customerName}</span>
-              {customerNumber ? ` · ${customerNumber}` : ''}
+              {customerPhone ? ` · ${customerPhone}` : ''}
             </p>
           )}
         </div>
