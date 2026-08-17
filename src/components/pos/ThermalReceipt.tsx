@@ -22,9 +22,8 @@ const paymentLabels: Record<PaymentMethod, string> = {
   cash: 'Cash',
   mobile_money: 'Mobile Money',
   bank_transfer: 'Bank Transfer',
-  card: 'Card',
-  credit: 'Credit',
-} as Record<PaymentMethod, string>;
+  split: 'Split Payment',
+};
 
 export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
   ({ items, subtotal, vatAmount, total, paymentMethod, receiptNumber, date }, ref) => {
