@@ -45,7 +45,7 @@ export default function POS() {
   // Customer details
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerNumber, setCustomerNumber] = useState('');
+  
   const [referralCode, setReferralCode] = useState('');
   const [customerOpen, setCustomerOpen] = useState(false);
 
@@ -215,9 +215,14 @@ export default function POS() {
       toast({ title: 'Customer name required', description: 'Enter the client name to continue', variant: 'destructive' });
       return;
     }
+    if (!customerPhone.trim()) {
+      toast({ title: 'Contact required', description: 'Enter the customer phone/contact to continue', variant: 'destructive' });
+      return;
+    }
     setCustomerOpen(false);
     setTimeout(() => setConfirmOpen(true), 120);
   };
+
 
   /* ---------------- Step 4: confirm + Enter -> save + receipt ---------------- */
   const handleCheckout = async () => {
@@ -227,24 +232,16 @@ export default function POS() {
     }
     setSaving(true);
     const receiptNumber = `${docType === 'order' ? 'ORD' : 'MC'}-${Date.now().toString().slice(-8)}`;
-    let assignedNumber = customerNumber.trim();
+    let assignedNumber = '';
     let discount = 0;
     let clientId: string | null = null;
     let offline = false;
 
     try {
-      /* --- find or create the client, resolve referral credits --- */
+      /* --- find or create the client by contact, resolve referral credits --- */
       let client: { id: string; customer_number: string | null; referral_credits: number } | null = null;
 
-      if (assignedNumber) {
-        const { data } = await supabase
-          .from('clients')
-          .select('id, customer_number, referral_credits')
-          .eq('customer_number', assignedNumber)
-          .maybeSingle();
-        client = (data as typeof client) ?? null;
-      }
-      if (!client && customerPhone.trim()) {
+      if (customerPhone.trim()) {
         const { data } = await supabase
           .from('clients')
           .select('id, customer_number, referral_credits')
@@ -253,7 +250,8 @@ export default function POS() {
         client = (data as typeof client) ?? null;
       }
       if (!client) {
-        assignedNumber = assignedNumber || newCustomerNumber();
+        assignedNumber = newCustomerNumber();
+
         const { data, error } = await supabase
           .from('clients')
           .insert({
@@ -407,7 +405,7 @@ export default function POS() {
     setCart([]);
     setCustomerName('');
     setCustomerPhone('');
-    setCustomerNumber('');
+    
     setReferralCode('');
     setConfirmOpen(false);
     setSaving(false);
@@ -542,7 +540,7 @@ export default function POS() {
           {customerName && (
             <p className="text-xs text-muted-foreground">
               Customer: <span className="font-medium text-foreground">{customerName}</span>
-              {customerNumber ? ` · ${customerNumber}` : ''}
+              {customerPhone ? ` · ${customerPhone}` : ''}
             </p>
           )}
         </div>
@@ -680,18 +678,18 @@ export default function POS() {
               <Input ref={nameRef} value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Phone</label>
-              <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="h-11" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Customer number (existing client)</label>
+              <label className="text-sm font-medium">Contact (phone) *</label>
               <Input
-                placeholder="Leave blank to auto-generate"
-                value={customerNumber}
-                onChange={e => setCustomerNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. 0785029019"
+                value={customerPhone}
+                onChange={e => setCustomerPhone(e.target.value)}
                 className="h-11"
               />
+              <p className="text-xs text-muted-foreground">
+                A customer number is generated automatically and printed on the receipt.
+              </p>
             </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Referred by (customer number)</label>
               <Input
