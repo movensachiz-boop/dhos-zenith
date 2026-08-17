@@ -11,7 +11,6 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  Zap,
   HelpCircle
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
