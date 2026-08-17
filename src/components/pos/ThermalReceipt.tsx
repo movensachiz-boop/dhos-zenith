@@ -119,10 +119,26 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         <div className="flex flex-col gap-0.5">
           <span className="font-bold uppercase">Customer</span>
           <span>{customerName || 'Walk-in'}</span>
-          {customerPhone ? <span>{customerPhone}</span> : null}
-          {customerNumber ? <span>Customer No: {customerNumber}</span> : null}
-          {referralCode ? <span>Referred by: {referralCode}</span> : null}
+          {customerPhone ? (
+            <>
+              <span className="font-bold">Contact</span>
+              <span>{customerPhone}</span>
+            </>
+          ) : null}
+          {customerNumber ? (
+            <>
+              <span className="font-bold">Customer No</span>
+              <span>{customerNumber}</span>
+            </>
+          ) : null}
+          {referralCode ? (
+            <>
+              <span className="font-bold">Referred by</span>
+              <span>{referralCode}</span>
+            </>
+          ) : null}
         </div>
+
 
         <Divider />
 
