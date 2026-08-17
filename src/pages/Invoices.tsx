@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { CartItem, PaymentMethod, Product } from '@/types';
 import { useRef } from 'react';
+import { printReceiptHtml } from '@/lib/receiptPrint';
 
 type Sale = {
   id: string;

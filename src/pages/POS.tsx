@@ -10,6 +10,7 @@ import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, logAudit } from '@/lib/db';
 import { cacheProducts, readCachedProducts, queueSale, readQueue, writeQueue } from '@/lib/offline';
+import { printReceiptHtml } from '@/lib/receiptPrint';
 
 const REFERRAL_RATE = 0.05; // referrer earns 5% of the sale as credit
 
