@@ -1,0 +1,109 @@
+import { useEffect, useState } from 'react';
+import { Loader2, Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { logAudit } from '@/lib/db';
+import { useAuth } from '@/hooks/useAuth';
+
+type Settings = {
+  id: string;
+  store_name: string;
+  tagline: string;
+  phone: string;
+  address: string | null;
+  vat_rate: number;
+  currency: string;
+};
+
+export default function SettingsPage() {
+  const { user } = useAuth();
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.from('settings').select('*').limit(1).maybeSingle();
+      if (error) toast({ title: 'Failed to load settings', description: error.message, variant: 'destructive' });
+      else setSettings(data as unknown as Settings);
+      setLoading(false);
+    })();
+  }, []);
+
+  const update = (patch: Partial<Settings>) => setSettings(prev => (prev ? { ...prev, ...patch } : prev));
+
+  const save = async () => {
+    if (!settings) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from('settings')
+      .update({
+        store_name: settings.store_name,
+        tagline: settings.tagline,
+        phone: settings.phone,
+        address: settings.address,
+        vat_rate: Number(settings.vat_rate),
+        currency: settings.currency,
+      })
+      .eq('id', settings.id);
+    setSaving(false);
+    if (error) {
+      toast({ title: 'Could not save settings', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await logAudit('update', 'settings', settings.id);
+    toast({ title: 'Settings saved' });
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+  }
+
+  if (!settings) return <p className="p-12 text-center text-muted-foreground">No settings record found.</p>;
+
+  return (
+    <div className="space-y-6 animate-fade-in max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">Store details, tax and currency</p>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 space-y-4">
+        <Field label="Store name" value={settings.store_name} onChange={v => update({ store_name: v })} />
+        <Field label="Tagline" value={settings.tagline} onChange={v => update({ tagline: v })} />
+        <Field label="Phone" value={settings.phone} onChange={v => update({ phone: v })} />
+        <Field label="Address" value={settings.address ?? ''} onChange={v => update({ address: v })} />
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label="VAT rate (e.g. 0.15)"
+            value={String(settings.vat_rate)}
+            type="number"
+            onChange={v => update({ vat_rate: Number(v) })}
+          />
+          <Field label="Currency" value={settings.currency} onChange={v => update({ currency: v })} />
+        </div>
+        <Button onClick={save} disabled={saving} variant="pos">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" />Save settings</>}
+        </Button>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6 space-y-2">
+        <h2 className="font-semibold">Account</h2>
+        <p className="text-sm text-muted-foreground">Signed in as {user?.email}</p>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label, value, onChange, type = 'text',
+}: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-medium">{label}</label>
+      <Input type={type} value={value} onChange={e => onChange(e.target.value)} />
+    </div>
+  );
+}
