@@ -156,7 +156,8 @@ export default function Invoices() {
                 ref={receiptRef}
                 items={preview.items}
                 subtotal={Number(preview.sale.subtotal)}
-                vatAmount={Number(preview.sale.vat_amount)}
+                discount={Number((preview.sale as unknown as { discount?: number }).discount ?? 0)}
+
                 total={Number(preview.sale.total)}
                 paymentMethod={preview.sale.payment_method as PaymentMethod}
                 receiptNumber={preview.sale.receipt_number}
