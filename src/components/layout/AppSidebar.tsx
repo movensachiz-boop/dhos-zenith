@@ -60,8 +60,8 @@ export function AppSidebar() {
           </div>
         )}
         {collapsed && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary mx-auto">
-            <Zap className="h-5 w-5 text-primary-foreground" />
+          <div className="mx-auto flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-background">
+            <img src={logoAsset.url} alt="Maita Cakes logo" className="h-8 w-8 object-contain" />
           </div>
         )}
       </div>
