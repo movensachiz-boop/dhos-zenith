@@ -232,24 +232,16 @@ export default function POS() {
     }
     setSaving(true);
     const receiptNumber = `${docType === 'order' ? 'ORD' : 'MC'}-${Date.now().toString().slice(-8)}`;
-    let assignedNumber = customerNumber.trim();
+    let assignedNumber = '';
     let discount = 0;
     let clientId: string | null = null;
     let offline = false;
 
     try {
-      /* --- find or create the client, resolve referral credits --- */
+      /* --- find or create the client by contact, resolve referral credits --- */
       let client: { id: string; customer_number: string | null; referral_credits: number } | null = null;
 
-      if (assignedNumber) {
-        const { data } = await supabase
-          .from('clients')
-          .select('id, customer_number, referral_credits')
-          .eq('customer_number', assignedNumber)
-          .maybeSingle();
-        client = (data as typeof client) ?? null;
-      }
-      if (!client && customerPhone.trim()) {
+      if (customerPhone.trim()) {
         const { data } = await supabase
           .from('clients')
           .select('id, customer_number, referral_credits')
@@ -258,7 +250,8 @@ export default function POS() {
         client = (data as typeof client) ?? null;
       }
       if (!client) {
-        assignedNumber = assignedNumber || newCustomerNumber();
+        assignedNumber = newCustomerNumber();
+
         const { data, error } = await supabase
           .from('clients')
           .insert({
