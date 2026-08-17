@@ -16,6 +16,8 @@ interface ThermalReceiptProps {
   paymentMethod: PaymentMethod;
   receiptNumber: string;
   date: Date;
+  docType?: 'sale' | 'order';
+  customerName?: string;
 }
 
 const paymentLabels: Record<PaymentMethod, string> = {
@@ -26,7 +28,7 @@ const paymentLabels: Record<PaymentMethod, string> = {
 };
 
 export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
-  ({ items, subtotal, vatAmount, total, paymentMethod, receiptNumber, date }, ref) => {
+  ({ items, subtotal, vatAmount, total, paymentMethod, receiptNumber, date, docType = 'sale', customerName }, ref) => {
     return (
       <div
         ref={ref}
@@ -41,18 +43,27 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
           <p className="mt-1 text-sm font-bold tracking-wide">{STORE_INFO.name}</p>
           <p className="text-[10px]">{STORE_INFO.tagline}</p>
           <p className="text-[10px]">Tel: {STORE_INFO.phone}</p>
+          <p className="mt-1 text-[11px] font-bold uppercase">
+            {docType === 'order' ? 'Order Receipt' : 'Sale Receipt'}
+          </p>
         </div>
 
         <div className="my-2 border-t border-dashed border-foreground/40" />
 
         <div className="flex justify-between">
-          <span>Receipt</span>
+          <span>{docType === 'order' ? 'Order' : 'Receipt'}</span>
           <span>#{receiptNumber}</span>
         </div>
         <div className="flex justify-between">
           <span>Date</span>
           <span>{date.toLocaleString()}</span>
         </div>
+        {customerName ? (
+          <div className="flex justify-between">
+            <span>Customer</span>
+            <span>{customerName}</span>
+          </div>
+        ) : null}
 
         <div className="my-2 border-t border-dashed border-foreground/40" />
 
@@ -85,13 +96,15 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
           <span>${total.toFixed(2)}</span>
         </div>
         <div className="mt-1 flex justify-between">
-          <span>Paid via</span>
+          <span>{docType === 'order' ? 'Payment' : 'Paid via'}</span>
           <span>{paymentLabels[paymentMethod] ?? paymentMethod}</span>
         </div>
 
         <div className="my-2 border-t border-dashed border-foreground/40" />
 
-        <p className="text-center text-[10px]">Thank you for shopping with us!</p>
+        <p className="text-center text-[10px]">
+          {docType === 'order' ? 'Order confirmed. Thank you!' : 'Thank you for shopping with us!'}
+        </p>
         <p className="text-center text-[10px]">{STORE_INFO.phone}</p>
       </div>
     );
