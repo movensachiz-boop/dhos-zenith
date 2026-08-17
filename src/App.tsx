@@ -49,14 +49,15 @@ const AppRoutes = () => {
       <Route path="/" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
       <Route path="/pos" element={<ProtectedRoute><AppLayout><POS /></AppLayout></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><AppLayout><Products /></AppLayout></ProtectedRoute>} />
-      <Route path="/inventory" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/clients" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/suppliers" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/transporters" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/reports" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/invoices" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/audit" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><AppLayout><Placeholder /></AppLayout></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute><AppLayout><Inventory /></AppLayout></ProtectedRoute>} />
+      <Route path="/clients" element={<ProtectedRoute><AppLayout><Clients /></AppLayout></ProtectedRoute>} />
+      <Route path="/suppliers" element={<ProtectedRoute><AppLayout><Suppliers /></AppLayout></ProtectedRoute>} />
+      <Route path="/transporters" element={<ProtectedRoute><AppLayout><Transporters /></AppLayout></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><AppLayout><Reports /></AppLayout></ProtectedRoute>} />
+      <Route path="/invoices" element={<ProtectedRoute><AppLayout><Invoices /></AppLayout></ProtectedRoute>} />
+      <Route path="/audit" element={<ProtectedRoute><AppLayout><Audit /></AppLayout></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+
       <Route path="/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
