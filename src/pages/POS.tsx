@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, KeyboardEvent } from 'react';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, Receipt, Loader2 } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, Receipt, Loader2, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product, CartItem, PaymentMethod } from '@/types';
@@ -9,20 +9,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, logAudit } from '@/lib/db';
+import { cacheProducts, readCachedProducts, queueSale, readQueue, writeQueue } from '@/lib/offline';
 
-const VAT_RATE = 0.15;
+const REFERRAL_RATE = 0.05; // referrer earns 5% of the sale as credit
 
 type Receipt = {
   items: CartItem[];
   subtotal: number;
-  vatAmount: number;
+  discount: number;
   total: number;
   paymentMethod: PaymentMethod;
   receiptNumber: string;
   date: Date;
   docType: 'sale' | 'order';
   customerName?: string;
+  customerPhone?: string;
+  customerNumber?: string;
+  referralCode?: string;
+  offline?: boolean;
 };
+
+const newCustomerNumber = () => `MC${Math.floor(10000 + Math.random() * 90000)}`;
 
 export default function POS() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,45 +39,95 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('cash');
   const [docType, setDocType] = useState<'sale' | 'order'>('sale');
-  const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+
+  // Customer details
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerNumber, setCustomerNumber] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [customerOpen, setCustomerOpen] = useState(false);
 
   // Enter-driven flow state
   const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
   const [pendingQty, setPendingQty] = useState('1');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [online, setOnline] = useState(navigator.onLine);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const qtyRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
     try {
-      setProducts(await fetchProducts());
+      const list = await fetchProducts();
+      setProducts(list);
+      cacheProducts(list);
     } catch (e) {
-      toast({ title: 'Failed to load products', description: (e as Error).message, variant: 'destructive' });
+      const cached = readCachedProducts<Product>();
+      if (cached.length) {
+        setProducts(cached);
+        toast({ title: 'Offline mode', description: 'Showing cached products.' });
+      } else {
+        toast({ title: 'Failed to load products', description: (e as Error).message, variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------- Sync queued offline sales ---------------- */
+  const syncQueue = async () => {
+    const queue = readQueue();
+    if (!queue.length) return;
+    const remaining = [];
+    for (const entry of queue) {
+      try {
+        const { data: sale, error } = await supabase
+          .from('sales')
+          .insert(entry.sale as never)
+          .select()
+          .single();
+        if (error) throw error;
+        await supabase.from('sale_items').insert(
+          entry.items.map(i => ({ ...i, sale_id: sale.id })) as never
+        );
+      } catch {
+        remaining.push(entry);
+      }
+    }
+    writeQueue(remaining);
+    if (remaining.length < queue.length) {
+      toast({ title: 'Offline sales synced', description: `${queue.length - remaining.length} receipt(s) uploaded.` });
+    }
+  };
+
   useEffect(() => {
     load();
+    syncQueue();
     searchRef.current?.focus();
+    const goOnline = () => { setOnline(true); syncQueue(); };
+    const goOffline = () => setOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
   }, []);
 
   useEffect(() => {
-    if (pendingProduct) {
-      setTimeout(() => qtyRef.current?.select(), 50);
-    }
+    if (pendingProduct) setTimeout(() => qtyRef.current?.select(), 50);
   }, [pendingProduct]);
 
-  const categories = useMemo(
-    () => [...new Set(products.map(p => p.category))],
-    [products]
-  );
+  useEffect(() => {
+    if (customerOpen) setTimeout(() => nameRef.current?.focus(), 50);
+  }, [customerOpen]);
+
+  const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -89,8 +146,7 @@ export default function POS() {
     if (e.key !== 'Enter') return;
     e.preventDefault();
     if (searchQuery.trim() === '') {
-      // Step 3: nothing typed -> Enter moves to confirming the sale
-      if (cart.length > 0) setConfirmOpen(true);
+      if (cart.length > 0) setCustomerOpen(true);
       return;
     }
     const match = filteredProducts[0];
@@ -149,16 +205,19 @@ export default function POS() {
     }));
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.product.id !== productId));
-  };
+  const removeFromCart = (productId: string) => setCart(prev => prev.filter(i => i.product.id !== productId));
 
   const subtotal = cart.reduce((sum, item) => sum + item.lineTotal, 0);
-  const vatAmount = cart.reduce(
-    (sum, item) => sum + (item.product.vatApplicable ? item.lineTotal * VAT_RATE : 0),
-    0
-  );
-  const total = subtotal + vatAmount;
+
+  /* ---------------- Step 3: customer details -> confirm ---------------- */
+  const submitCustomer = () => {
+    if (!customerName.trim()) {
+      toast({ title: 'Customer name required', description: 'Enter the client name to continue', variant: 'destructive' });
+      return;
+    }
+    setCustomerOpen(false);
+    setTimeout(() => setConfirmOpen(true), 120);
+  };
 
   /* ---------------- Step 4: confirm + Enter -> save + receipt ---------------- */
   const handleCheckout = async () => {
@@ -167,25 +226,77 @@ export default function POS() {
       return;
     }
     setSaving(true);
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const receiptNumber = `${docType === 'order' ? 'ORD' : 'MC'}-${Date.now().toString().slice(-8)}`;
+    const receiptNumber = `${docType === 'order' ? 'ORD' : 'MC'}-${Date.now().toString().slice(-8)}`;
+    let assignedNumber = customerNumber.trim();
+    let discount = 0;
+    let clientId: string | null = null;
+    let offline = false;
 
+    try {
+      /* --- find or create the client, resolve referral credits --- */
+      let client: { id: string; customer_number: string | null; referral_credits: number } | null = null;
+
+      if (assignedNumber) {
+        const { data } = await supabase
+          .from('clients')
+          .select('id, customer_number, referral_credits')
+          .eq('customer_number', assignedNumber)
+          .maybeSingle();
+        client = (data as typeof client) ?? null;
+      }
+      if (!client && customerPhone.trim()) {
+        const { data } = await supabase
+          .from('clients')
+          .select('id, customer_number, referral_credits')
+          .eq('phone', customerPhone.trim())
+          .maybeSingle();
+        client = (data as typeof client) ?? null;
+      }
+      if (!client) {
+        assignedNumber = assignedNumber || newCustomerNumber();
+        const { data, error } = await supabase
+          .from('clients')
+          .insert({
+            name: customerName.trim(),
+            phone: customerPhone.trim() || null,
+            customer_number: assignedNumber,
+            referred_by: referralCode.trim() || null,
+          } as never)
+          .select('id, customer_number, referral_credits')
+          .single();
+        if (error) throw error;
+        client = data as typeof client;
+      }
+      clientId = client!.id;
+      assignedNumber = client!.customer_number ?? assignedNumber;
+
+      // apply this customer's earned referral credit as a discount
+      const credits = Number(client!.referral_credits ?? 0);
+      discount = Math.min(credits, subtotal);
+
+      const total = Math.max(0, subtotal - discount);
+
+      const { data: auth } = await supabase.auth.getUser();
       const { data: sale, error } = await supabase
         .from('sales')
         .insert({
           receipt_number: receiptNumber,
           doc_type: docType,
           subtotal,
-          vat_amount: vatAmount,
+          vat_amount: 0,
+          discount,
           total,
           payment_method: selectedPayment,
           currency: 'USD',
           status: 'completed',
-          client_name: customerName || null,
+          client_id: clientId,
+          client_name: customerName.trim(),
+          client_phone: customerPhone.trim() || null,
+          customer_number: assignedNumber,
+          referral_code: referralCode.trim() || null,
           cashier_id: auth.user?.id ?? null,
           cashier_name: auth.user?.email ?? null,
-        })
+        } as never)
         .select()
         .single();
       if (error) throw error;
@@ -198,53 +309,122 @@ export default function POS() {
           sku: item.product.sku,
           quantity: item.quantity,
           unit_price: item.product.sellingPrice,
-          vat_applicable: item.product.vatApplicable,
+          vat_applicable: false,
           line_total: item.lineTotal,
         }))
       );
       if (itemsError) throw itemsError;
 
+      // consume used credits
+      if (discount > 0) {
+        await supabase
+          .from('clients')
+          .update({ referral_credits: Math.max(0, credits - discount) } as never)
+          .eq('id', clientId);
+      }
+
+      // reward the referrer
+      const code = referralCode.trim();
+      if (code && code !== assignedNumber) {
+        const { data: referrer } = await supabase
+          .from('clients')
+          .select('id, referral_credits')
+          .eq('customer_number', code)
+          .maybeSingle();
+        if (referrer) {
+          await supabase
+            .from('clients')
+            .update({
+              referral_credits: Number((referrer as { referral_credits: number }).referral_credits ?? 0) + total * REFERRAL_RATE,
+            } as never)
+            .eq('id', (referrer as { id: string }).id);
+        }
+      }
+
       await logAudit(docType === 'order' ? 'create_order' : 'create_sale', 'sale', sale.id, {
         receipt_number: receiptNumber,
         total,
       });
-
-      setReceipt({
-        items: cart,
-        subtotal,
-        vatAmount,
-        total,
-        paymentMethod: selectedPayment,
-        receiptNumber,
-        date: new Date(),
-        docType,
-        customerName: customerName || undefined,
+    } catch (e) {
+      // offline / network failure -> queue and still print
+      offline = true;
+      discount = 0;
+      assignedNumber = assignedNumber || newCustomerNumber();
+      queueSale({
+        sale: {
+          receipt_number: receiptNumber,
+          doc_type: docType,
+          subtotal,
+          vat_amount: 0,
+          discount: 0,
+          total: subtotal,
+          payment_method: selectedPayment,
+          currency: 'USD',
+          status: 'completed',
+          client_name: customerName.trim(),
+          client_phone: customerPhone.trim() || null,
+          customer_number: assignedNumber,
+          referral_code: referralCode.trim() || null,
+        },
+        items: cart.map(item => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          sku: item.product.sku,
+          quantity: item.quantity,
+          unit_price: item.product.sellingPrice,
+          vat_applicable: false,
+          line_total: item.lineTotal,
+        })),
       });
+      toast({
+        title: 'Saved offline',
+        description: 'Receipt generated. It will sync when the internet is back.',
+      });
+    }
+
+    const total = Math.max(0, subtotal - discount);
+    setReceipt({
+      items: cart,
+      subtotal,
+      discount,
+      total,
+      paymentMethod: selectedPayment,
+      receiptNumber,
+      date: new Date(),
+      docType,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim() || undefined,
+      customerNumber: assignedNumber,
+      referralCode: referralCode.trim() || undefined,
+      offline,
+    });
+    if (!offline) {
       toast({
         title: docType === 'order' ? 'Order Recorded!' : 'Sale Completed!',
         description: `Receipt ${receiptNumber} generated for $${total.toFixed(2)}`,
       });
-      setCart([]);
-      setCustomerName('');
-      setConfirmOpen(false);
-      load();
-    } catch (e) {
-      toast({ title: 'Could not record sale', description: (e as Error).message, variant: 'destructive' });
-    } finally {
-      setSaving(false);
     }
+    setCart([]);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerNumber('');
+    setReferralCode('');
+    setConfirmOpen(false);
+    setSaving(false);
+    if (!offline) load();
   };
 
   const handlePrintReceipt = () => {
     const content = receiptRef.current?.innerHTML;
     if (!content) return;
-    const win = window.open('', '_blank', 'width=380,height=640');
+    const win = window.open('', '_blank', 'width=380,height=760');
     if (!win) return;
     win.document.write(`<!doctype html><html><head><title>Receipt</title>
       <style>
-        body{font-family:ui-monospace,monospace;font-size:11px;margin:0;padding:8px;width:80mm;color:#000;background:#fff}
-        img{max-width:96px;display:block;margin:0 auto}
-        .flex{display:flex}.justify-between{justify-content:space-between}
+        body{font-family:ui-monospace,monospace;font-size:11px;line-height:1.6;margin:0;padding:10px;width:80mm;color:#000;background:#fff}
+        img{max-width:110px;display:block;margin:0 auto}
+        div{display:block}
+        .text-center{text-align:center}
       </style></head><body>${content}</body></html>`);
     win.document.close();
     win.focus();
@@ -273,9 +453,16 @@ export default function POS() {
               className="pl-11 h-12 text-lg"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Enter = pick top result → Enter = confirm quantity → Enter on empty search = review & complete
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">
+              Enter = pick top result → Enter = quantity → Enter on empty search = customer details → Enter = complete
+            </p>
+            {!online && (
+              <span className="flex items-center gap-1 text-xs font-medium text-warning">
+                <WifiOff className="h-3 w-3" /> Offline
+              </span>
+            )}
+          </div>
           <div className="flex gap-2 overflow-x-auto pb-2">
             <Button
               variant={selectedCategory === null ? 'default' : 'outline'}
@@ -352,11 +539,12 @@ export default function POS() {
               Order
             </Button>
           </div>
-          <Input
-            placeholder="Customer name (optional)"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-          />
+          {customerName && (
+            <p className="text-xs text-muted-foreground">
+              Customer: <span className="font-medium text-foreground">{customerName}</span>
+              {customerNumber ? ` · ${customerNumber}` : ''}
+            </p>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
@@ -404,18 +592,11 @@ export default function POS() {
 
         <div className="border-t p-4 space-y-4">
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">VAT (15%)</span>
-              <span>${vatAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold pt-2 border-t">
+            <div className="flex justify-between text-lg font-bold pt-2">
               <span>Total</span>
-              <span className="text-primary">${total.toFixed(2)}</span>
+              <span className="text-primary">${subtotal.toFixed(2)}</span>
             </div>
+            <p className="text-xs text-muted-foreground">Referral credit is applied at checkout.</p>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
@@ -435,10 +616,10 @@ export default function POS() {
           <Button
             variant="pos"
             className="w-full"
-            onClick={() => setConfirmOpen(true)}
+            onClick={() => setCustomerOpen(true)}
             disabled={cart.length === 0}
           >
-            {docType === 'order' ? 'Record Order' : 'Complete Sale'} • ${total.toFixed(2)}
+            {docType === 'order' ? 'Record Order' : 'Complete Sale'} • ${subtotal.toFixed(2)}
           </Button>
         </div>
       </div>
@@ -478,6 +659,59 @@ export default function POS() {
         </DialogContent>
       </Dialog>
 
+      {/* Customer details */}
+      <Dialog open={customerOpen} onOpenChange={setCustomerOpen}>
+        <DialogContent
+          className="max-w-sm"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              submitCustomer();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Customer details</DialogTitle>
+            <DialogDescription>Press Enter to continue to confirmation</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Full name *</label>
+              <Input ref={nameRef} value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-11" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Phone</label>
+              <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="h-11" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Customer number (existing client)</label>
+              <Input
+                placeholder="Leave blank to auto-generate"
+                value={customerNumber}
+                onChange={e => setCustomerNumber(e.target.value.toUpperCase())}
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Referred by (customer number)</label>
+              <Input
+                placeholder="e.g. MC12345"
+                value={referralCode}
+                onChange={e => setReferralCode(e.target.value.toUpperCase())}
+                className="h-11"
+              />
+              <p className="text-xs text-muted-foreground">
+                The referrer earns {Math.round(REFERRAL_RATE * 100)}% of this sale as a discount credit.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setCustomerOpen(false)}>Back</Button>
+            <Button onClick={submitCustomer}>Continue (Enter)</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Confirm sale */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent
@@ -492,7 +726,7 @@ export default function POS() {
           <DialogHeader>
             <DialogTitle>Confirm {docType === 'order' ? 'Order' : 'Sale'}</DialogTitle>
             <DialogDescription>
-              {cart.length} item(s) · Total ${total.toFixed(2)} · Press Enter to confirm
+              {customerName} · {cart.length} item(s) · ${subtotal.toFixed(2)} · Press Enter to confirm
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
