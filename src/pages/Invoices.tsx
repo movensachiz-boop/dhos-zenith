@@ -81,16 +81,7 @@ export default function Invoices() {
   const print = () => {
     const content = receiptRef.current?.innerHTML;
     if (!content) return;
-    const win = window.open('', '_blank', 'width=380,height=640');
-    if (!win) return;
-    win.document.write(`<!doctype html><html><head><title>Receipt</title><style>
-      body{font-family:ui-monospace,monospace;font-size:11px;margin:0;padding:8px;width:80mm;color:#000;background:#fff}
-      img{max-width:96px;display:block;margin:0 auto}
-      .flex{display:flex}.justify-between{justify-content:space-between}
-    </style></head><body>${content}</body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 400);
+    printReceiptHtml(content);
   };
 
   const filtered = sales.filter(s =>
