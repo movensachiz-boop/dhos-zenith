@@ -8,10 +8,18 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Products from "./pages/Products";
-import Placeholder from "./pages/Placeholder";
+import Inventory from "./pages/Inventory";
+import Clients from "./pages/Clients";
+import Suppliers from "./pages/Suppliers";
+import Transporters from "./pages/Transporters";
+import Reports from "./pages/Reports";
+import Invoices from "./pages/Invoices";
+import Audit from "./pages/Audit";
+import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Help from "./pages/Help";
 import Auth from "./pages/Auth";
+
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
