@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -122,12 +123,14 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <span className="text-2xl font-bold text-primary">DH</span>
-          </div>
-          <CardTitle className="text-2xl">DHOS Operations</CardTitle>
+          <img
+            src={logoAsset.url}
+            alt="Maita Cakes logo"
+            className="mx-auto mb-2 h-24 w-24 object-contain"
+          />
+          <CardTitle className="text-2xl">Maita Cakes</CardTitle>
           <CardDescription>
-            DreamHunters Operations System - Sign in to continue
+            Sweet moments on every bite &middot; 0785029019
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -73,9 +73,9 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         brand: {
-          yellow: "hsl(var(--brand-yellow))",
-          "yellow-light": "hsl(var(--brand-yellow-light))",
-          "yellow-dark": "hsl(var(--brand-yellow-dark))",
+          pink: "hsl(var(--brand-pink))",
+          "pink-light": "hsl(var(--brand-pink-light))",
+          "pink-dark": "hsl(var(--brand-pink-dark))",
           black: "hsl(var(--brand-black))",
         },
       },

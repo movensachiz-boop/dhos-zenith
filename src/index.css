@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DreamHunters Operations System (DHOS) Design System
-   Brand: Yellow (#FFC107) + Black
+/* Maita Cakes POS Design System
+   Brand: Pink + Black + White
    Style: Enterprise POS, High Contrast, Minimalist
 */
 
@@ -12,9 +12,9 @@
 @layer base {
   :root {
     /* Core Brand Colors */
-    --brand-yellow: 45 100% 51%;
-    --brand-yellow-light: 45 100% 60%;
-    --brand-yellow-dark: 45 100% 40%;
+    --brand-pink: 327 78% 46%;
+    --brand-pink-light: 330 85% 65%;
+    --brand-pink-dark: 327 80% 34%;
     --brand-black: 0 0% 0%;
     
     /* Semantic Colors - Light Mode */
@@ -27,8 +27,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 5%;
 
-    --primary: 45 100% 51%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 327 78% 46%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 98%;
@@ -36,8 +36,8 @@
     --muted: 0 0% 94%;
     --muted-foreground: 0 0% 40%;
 
-    --accent: 45 100% 95%;
-    --accent-foreground: 45 100% 30%;
+    --accent: 330 80% 96%;
+    --accent-foreground: 327 80% 30%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
@@ -53,22 +53,22 @@
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 45 100% 51%;
+    --ring: 327 78% 46%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 45 100% 51%;
-    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-primary: 327 78% 46%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 45 100% 51%;
+    --sidebar-ring: 327 78% 46%;
 
     /* Custom Gradients */
-    --gradient-brand: linear-gradient(135deg, hsl(45 100% 51%) 0%, hsl(38 100% 50%) 100%);
+    --gradient-brand: linear-gradient(135deg, hsl(327 78% 46%) 0%, hsl(330 85% 65%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 3%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
 
@@ -76,7 +76,7 @@
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-brand: 0 4px 14px 0 hsl(45 100% 51% / 0.25);
+    --shadow-brand: 0 4px 14px 0 hsl(327 78% 46% / 0.25);
   }
 
   .dark {
@@ -89,8 +89,8 @@
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 45 100% 51%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 327 78% 46%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
@@ -99,23 +99,23 @@
     --muted-foreground: 0 0% 60%;
 
     --accent: 0 0% 12%;
-    --accent-foreground: 45 100% 60%;
+    --accent-foreground: 330 85% 65%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 45 100% 51%;
+    --ring: 327 78% 46%;
 
     --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 45 100% 51%;
-    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-primary: 327 78% 46%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 45 100% 51%;
+    --sidebar-ring: 327 78% 46%;
 
     --gradient-card: linear-gradient(145deg, hsl(0 0% 10%) 0%, hsl(0 0% 6%) 100%);
   }

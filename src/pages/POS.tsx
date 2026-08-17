@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,8 @@ import { mockProducts, mockCategories } from '@/data/mockData';
 import { Product, CartItem, PaymentMethod } from '@/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 
 const VAT_RATE = 0.15;
 
@@ -15,6 +17,16 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('cash');
   const { toast } = useToast();
+  const [receipt, setReceipt] = useState<{
+    items: CartItem[];
+    subtotal: number;
+    vatAmount: number;
+    total: number;
+    paymentMethod: PaymentMethod;
+    receiptNumber: string;
+    date: Date;
+  } | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   const filteredProducts = useMemo(() => {
     return mockProducts.filter(product => {
@@ -70,11 +82,37 @@ export default function POS() {
       return;
     }
 
+    setReceipt({
+      items: cart,
+      subtotal,
+      vatAmount,
+      total,
+      paymentMethod: selectedPayment,
+      receiptNumber: `MC-${Date.now().toString().slice(-6)}`,
+      date: new Date(),
+    });
+
     toast({
       title: "Sale Completed!",
-      description: `Invoice generated for $${total.toFixed(2)}`,
+      description: `Receipt generated for $${total.toFixed(2)}`,
     });
     setCart([]);
+  };
+
+  const handlePrintReceipt = () => {
+    const content = receiptRef.current?.innerHTML;
+    if (!content) return;
+    const win = window.open('', '_blank', 'width=380,height=640');
+    if (!win) return;
+    win.document.write(`<!doctype html><html><head><title>Receipt</title>
+      <style>
+        body{font-family:ui-monospace,monospace;font-size:11px;margin:0;padding:8px;width:80mm;color:#000;background:#fff}
+        img{max-width:96px;display:block;margin:0 auto}
+        .flex{display:flex}.justify-between{justify-content:space-between}
+      </style></head><body>${content}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 400);
   };
 
   const paymentMethods = [
@@ -255,6 +293,24 @@ export default function POS() {
           </Button>
         </div>
       </div>
+
+      {/* Receipt Preview */}
+      <Dialog open={!!receipt} onOpenChange={(open) => !open && setReceipt(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Receipt</DialogTitle>
+          </DialogHeader>
+          {receipt && (
+            <div className="max-h-[60vh] overflow-y-auto rounded-lg border">
+              <ThermalReceipt ref={receiptRef} {...receipt} />
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setReceipt(null)}>Close</Button>
+            <Button onClick={handlePrintReceipt}>Print Receipt</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
