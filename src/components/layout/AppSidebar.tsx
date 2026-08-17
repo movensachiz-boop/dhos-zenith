@@ -18,6 +18,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -49,12 +50,12 @@ export function AppSidebar() {
       <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-background">
+              <img src={logoAsset.url} alt="Maita Cakes logo" className="h-8 w-8 object-contain" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-sidebar-foreground">DHOS</h1>
-              <p className="text-[10px] text-sidebar-foreground/60">DreamHunters Ops</p>
+              <h1 className="text-sm font-bold text-sidebar-foreground">Maita Cakes</h1>
+              <p className="text-[10px] text-sidebar-foreground/60">Sweet moments on every bite</p>
             </div>
           </div>
         )}
