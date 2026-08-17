@@ -73,7 +73,9 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         {/* Date + items, one per line, portrait */}
         <div className="flex flex-col gap-0.5">
           <span className="font-bold">Date</span>
-          <span>{date.toLocaleString()}</span>
+          <span>{date.toLocaleDateString()}</span>
+          <span className="font-bold">Time</span>
+          <span>{date.toLocaleTimeString()}</span>
         </div>
 
         <Divider />
@@ -81,13 +83,18 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         <div className="space-y-3">
           {items.map((item) => (
             <div key={item.product.id} className="flex flex-col">
-              <span className="font-bold uppercase">{item.product.name}</span>
-              <span>Qty: {item.quantity}</span>
-              <span>Unit: ${item.product.sellingPrice.toFixed(2)}</span>
-              <span>Amount: ${item.lineTotal.toFixed(2)}</span>
+              <span className="font-bold">Product</span>
+              <span className="uppercase">{item.product.name}</span>
+              <span className="font-bold">Qty</span>
+              <span>{item.quantity}</span>
+              <span className="font-bold">Unit</span>
+              <span>${item.product.sellingPrice.toFixed(2)}</span>
+              <span className="font-bold">Amount</span>
+              <span>${item.lineTotal.toFixed(2)}</span>
             </div>
           ))}
         </div>
+
 
         <Divider />
 
@@ -112,10 +119,26 @@ export const ThermalReceipt = forwardRef<HTMLDivElement, ThermalReceiptProps>(
         <div className="flex flex-col gap-0.5">
           <span className="font-bold uppercase">Customer</span>
           <span>{customerName || 'Walk-in'}</span>
-          {customerPhone ? <span>{customerPhone}</span> : null}
-          {customerNumber ? <span>Customer No: {customerNumber}</span> : null}
-          {referralCode ? <span>Referred by: {referralCode}</span> : null}
+          {customerPhone ? (
+            <>
+              <span className="font-bold">Contact</span>
+              <span>{customerPhone}</span>
+            </>
+          ) : null}
+          {customerNumber ? (
+            <>
+              <span className="font-bold">Customer No</span>
+              <span>{customerNumber}</span>
+            </>
+          ) : null}
+          {referralCode ? (
+            <>
+              <span className="font-bold">Referred by</span>
+              <span>{referralCode}</span>
+            </>
+          ) : null}
         </div>
+
 
         <Divider />
 
