@@ -70,11 +70,14 @@ export type Database = {
           address: string | null
           created_at: string
           credit_limit: number
+          customer_number: string | null
           email: string | null
           id: string
           name: string
           outstanding_balance: number
           phone: string | null
+          referral_credits: number
+          referred_by: string | null
           tin_number: string | null
           updated_at: string
         }
@@ -82,11 +85,14 @@ export type Database = {
           address?: string | null
           created_at?: string
           credit_limit?: number
+          customer_number?: string | null
           email?: string | null
           id?: string
           name: string
           outstanding_balance?: number
           phone?: string | null
+          referral_credits?: number
+          referred_by?: string | null
           tin_number?: string | null
           updated_at?: string
         }
@@ -94,11 +100,14 @@ export type Database = {
           address?: string | null
           created_at?: string
           credit_limit?: number
+          customer_number?: string | null
           email?: string | null
           id?: string
           name?: string
           outstanding_balance?: number
           phone?: string | null
+          referral_credits?: number
+          referred_by?: string | null
           tin_number?: string | null
           updated_at?: string
         }
@@ -248,13 +257,16 @@ export type Database = {
           cashier_name: string | null
           client_id: string | null
           client_name: string | null
+          client_phone: string | null
           created_at: string
           currency: string
+          customer_number: string | null
           discount: number
           doc_type: string
           id: string
           payment_method: string
           receipt_number: string
+          referral_code: string | null
           status: string
           subtotal: number
           total: number
@@ -265,13 +277,16 @@ export type Database = {
           cashier_name?: string | null
           client_id?: string | null
           client_name?: string | null
+          client_phone?: string | null
           created_at?: string
           currency?: string
+          customer_number?: string | null
           discount?: number
           doc_type?: string
           id?: string
           payment_method?: string
           receipt_number: string
+          referral_code?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -282,13 +297,16 @@ export type Database = {
           cashier_name?: string | null
           client_id?: string | null
           client_name?: string | null
+          client_phone?: string | null
           created_at?: string
           currency?: string
+          customer_number?: string | null
           discount?: number
           doc_type?: string
           id?: string
           payment_method?: string
           receipt_number?: string
+          referral_code?: string | null
           status?: string
           subtotal?: number
           total?: number
