@@ -678,18 +678,18 @@ export default function POS() {
               <Input ref={nameRef} value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Phone</label>
-              <Input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} className="h-11" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Customer number (existing client)</label>
+              <label className="text-sm font-medium">Contact (phone) *</label>
               <Input
-                placeholder="Leave blank to auto-generate"
-                value={customerNumber}
-                onChange={e => setCustomerNumber(e.target.value.toUpperCase())}
+                placeholder="e.g. 0785029019"
+                value={customerPhone}
+                onChange={e => setCustomerPhone(e.target.value)}
                 className="h-11"
               />
+              <p className="text-xs text-muted-foreground">
+                A customer number is generated automatically and printed on the receipt.
+              </p>
             </div>
+
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Referred by (customer number)</label>
               <Input
