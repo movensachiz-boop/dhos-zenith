@@ -405,7 +405,7 @@ export default function POS() {
     setCart([]);
     setCustomerName('');
     setCustomerPhone('');
-    setCustomerNumber('');
+    
     setReferralCode('');
     setConfirmOpen(false);
     setSaving(false);
