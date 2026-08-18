@@ -71,7 +71,30 @@ export default function Quotations() {
     const html = buildA4Html({
       docTitle: kind === 'quote' ? 'QUOTATION' : 'UPFRONT PAYMENT',
       docNumber: number,
-...
+      date: now,
+      validUntil:
+        kind === 'quote' ? new Date(now.getTime() + Number(validDays || 0) * 86400000) : undefined,
+      customerName,
+      customerPhone,
+      customerNumber,
+      customerAddress,
+      lines: validLines.map(({ description, quantity, unitPrice }) => ({
+        description,
+        quantity: Number(quantity),
+        unitPrice: Number(unitPrice),
+      })),
+      subtotal,
+      discount: Number(discount) || undefined,
+      total,
+      amountPaid: kind === 'upfront' ? Number(deposit) : undefined,
+      balanceDue: kind === 'upfront' ? balance : undefined,
+      paymentMethod: kind === 'upfront' ? paymentMethod : undefined,
+      notes:
+        kind === 'upfront'
+          ? [collectionDate ? `Collection / delivery date: ${collectionDate}` : '', notes]
+              .filter(Boolean)
+              .join('\n')
+          : notes,
       logoSrc,
       store: STORE_INFO,
     });
