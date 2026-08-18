@@ -57,7 +57,7 @@ export default function Quotations() {
 
   const validLines = lines.filter(l => l.description.trim() && Number(l.quantity) > 0);
 
-  const generate = (kind: 'quote' | 'upfront') => {
+  const generate = async (kind: 'quote' | 'upfront') => {
     if (validLines.length === 0) {
       toast({ title: 'Add at least one item', variant: 'destructive' });
       return;
