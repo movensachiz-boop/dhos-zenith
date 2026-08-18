@@ -11,7 +11,7 @@ import { useCachedLogo } from '@/lib/offline';
 import { fetchProducts } from '@/lib/db';
 import { Product } from '@/types';
 import { STORE_INFO } from '@/components/pos/ThermalReceipt';
-import { A4Line, buildA4Html, downloadA4Pdf } from '@/lib/a4Doc';
+import { A4DocInput, A4Line, downloadA4Pdf } from '@/lib/a4Doc';
 
 type Line = A4Line & { id: string };
 
@@ -68,7 +68,7 @@ export default function Quotations() {
     }
     const now = new Date();
     const number = docNo(kind === 'quote' ? 'QT' : 'UP');
-    const html = buildA4Html({
+    const documentData: A4DocInput = {
       docTitle: kind === 'quote' ? 'QUOTATION' : 'UPFRONT PAYMENT',
       docNumber: number,
       date: now,
@@ -97,9 +97,9 @@ export default function Quotations() {
           : notes,
       logoSrc,
       store: STORE_INFO,
-    });
+    };
     try {
-      await downloadA4Pdf(html, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
+      await downloadA4Pdf(documentData, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
       toast({ title: 'PDF downloaded' });
     } catch (e) {
       toast({ title: 'Could not generate PDF', description: (e as Error).message, variant: 'destructive' });

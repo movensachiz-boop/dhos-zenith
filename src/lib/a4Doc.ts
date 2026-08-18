@@ -131,70 +131,135 @@ export function buildA4Html(d: A4DocInput) {
   </body></html>`;
 }
 
-export async function downloadA4Pdf(html: string, fileName: string) {
-  const html2pdf = (await import('html2pdf.js')).default;
-
-  const holder = document.createElement('div');
-  // Keep it inside the viewport (html2canvas renders blank for far off-screen nodes)
-  holder.style.position = 'fixed';
-  holder.style.left = '0';
-  holder.style.top = '0';
-  holder.style.zIndex = '-1';
-  holder.style.opacity = '0';
-  holder.style.pointerEvents = 'none';
-  holder.style.width = '794px'; // A4 @96dpi
-  holder.style.background = '#ffffff';
-  holder.style.color = '#111111';
-
-  const body = html.replace(/^[\s\S]*<body[^>]*>/i, '').replace(/<\/body>[\s\S]*$/i, '');
-  const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
-  const css = styleMatch ? styleMatch[1] : '';
-
-  // Scope the document CSS to the holder so app tokens (oklch etc.) don't leak in
-  holder.innerHTML = `<style>
-    #a4-pdf-holder, #a4-pdf-holder * { box-sizing: border-box; color: #111; }
-    #a4-pdf-holder { font-family: Arial, Helvetica, sans-serif; font-size: 12px; background:#fff; padding: 8px; }
-    ${css.replace(/@page[^}]*}/g, '').replace(/\bbody\b/g, '#a4-pdf-holder')}
-  </style>${body}`;
-  holder.id = 'a4-pdf-holder';
-
-  document.body.appendChild(holder);
-
-  // Wait for images (logo) to finish loading, otherwise the canvas is blank
-  const imgs = Array.from(holder.querySelectorAll('img'));
-  await Promise.all(
-    imgs.map(
-      (img) =>
-        new Promise<void>((resolve) => {
-          if (img.complete && img.naturalWidth > 0) return resolve();
-          img.addEventListener('load', () => resolve(), { once: true });
-          img.addEventListener('error', () => resolve(), { once: true });
-          setTimeout(resolve, 4000);
-        })
-    )
-  );
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
+export async function downloadA4Pdf(d: A4DocInput, fileName: string) {
+  const { jsPDF } = await import('jspdf');
+  const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const pink = [233, 30, 140] as const;
+  const left = 14;
+  const right = 196;
+  let y = 16;
 
   try {
-    await html2pdf()
-      .set({
-        margin: 10,
-        filename: `${fileName}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          windowWidth: 794,
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      })
-      .from(holder)
-      .save();
-  } finally {
-    holder.remove();
+    const response = await fetch(d.logoSrc);
+    const blob = await response.blob();
+    const logo = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    pdf.addImage(logo, blob.type.includes('jpeg') ? 'JPEG' : 'PNG', left, y, 28, 28);
+  } catch {
+    // The document remains usable offline even when the logo was not cached.
   }
+
+  pdf.setTextColor(...pink);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(18);
+  pdf.text(d.store.name, 46, 23);
+  pdf.setTextColor(68, 68, 68);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  pdf.text(d.store.tagline, 46, 29);
+  pdf.text(`Tel: ${d.store.phone}`, 46, 34);
+  pdf.setTextColor(17, 17, 17);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(16);
+  pdf.text(d.docTitle, right, 19, { align: 'right' });
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  pdf.text(`No: ${d.docNumber}`, right, 26, { align: 'right' });
+  pdf.text(`Date: ${d.date.toLocaleDateString()}`, right, 31, { align: 'right' });
+  if (d.validUntil) pdf.text(`Valid until: ${d.validUntil.toLocaleDateString()}`, right, 36, { align: 'right' });
+  pdf.setDrawColor(...pink);
+  pdf.setLineWidth(0.8);
+  pdf.line(left, 46, right, 46);
+
+  y = 54;
+  pdf.setDrawColor(225, 225, 225);
+  pdf.setLineWidth(0.25);
+  pdf.rect(left, y, 86, 31);
+  pdf.rect(106, y, 90, 31);
+  pdf.setTextColor(...pink);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(9);
+  pdf.text('BILLED TO', 18, y + 6);
+  pdf.text('SUMMARY', 110, y + 6);
+  pdf.setTextColor(17, 17, 17);
+  pdf.setFontSize(9);
+  pdf.text(d.customerName || 'Walk-in customer', 18, y + 12);
+  pdf.setFont('helvetica', 'normal');
+  const customerDetails = [d.customerPhone && `Contact: ${d.customerPhone}`, d.customerNumber && `Customer No: ${d.customerNumber}`, d.customerAddress].filter(Boolean) as string[];
+  customerDetails.slice(0, 3).forEach((line, i) => pdf.text(line, 18, y + 18 + i * 5));
+  pdf.text(`Items: ${d.lines.length}`, 110, y + 12);
+  if (d.paymentMethod) pdf.text(`Payment: ${d.paymentMethod}`, 110, y + 18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(`Total: ${money(d.total)}`, 110, y + 24);
+  if (d.balanceDue !== undefined) pdf.text(`Balance due: ${money(d.balanceDue)}`, 110, y + 29);
+
+  y = 94;
+  const cols = [left, 24, 116, 139, 167, right];
+  pdf.setFillColor(17, 17, 17);
+  pdf.rect(left, y, right - left, 9, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(8);
+  ['#', 'DESCRIPTION', 'QTY', 'UNIT', 'AMOUNT'].forEach((label, i) => pdf.text(label, cols[i] + 2, y + 6));
+  y += 9;
+  pdf.setTextColor(17, 17, 17);
+  pdf.setFont('helvetica', 'normal');
+  d.lines.forEach((line, i) => {
+    const description = pdf.splitTextToSize(line.description, 86)[0] || '';
+    pdf.text(String(i + 1), cols[0] + 2, y + 6);
+    pdf.text(description, cols[1] + 2, y + 6);
+    pdf.text(String(line.quantity), cols[3] - 2, y + 6, { align: 'right' });
+    pdf.text(money(line.unitPrice), cols[4] - 2, y + 6, { align: 'right' });
+    pdf.text(money(line.quantity * line.unitPrice), cols[5] - 2, y + 6, { align: 'right' });
+    pdf.setDrawColor(230, 230, 230);
+    pdf.line(left, y + 9, right, y + 9);
+    y += 9;
+  });
+
+  y += 5;
+  const totals: [string, string, boolean][] = [
+    ['Subtotal', money(d.subtotal), false],
+    ...(d.discount ? [['Discount', `-${money(d.discount)}`, false] as [string, string, boolean]] : []),
+    ['Total', money(d.total), true],
+    ...(d.amountPaid !== undefined ? [['Upfront paid', money(d.amountPaid), false] as [string, string, boolean]] : []),
+    ...(d.balanceDue !== undefined ? [['Balance due', money(d.balanceDue), true] as [string, string, boolean]] : []),
+  ];
+  totals.forEach(([label, value, strong]) => {
+    pdf.setFont('helvetica', strong ? 'bold' : 'normal');
+    if (strong) pdf.setTextColor(...pink);
+    else pdf.setTextColor(17, 17, 17);
+    pdf.text(label, 140, y);
+    pdf.text(value, right, y, { align: 'right' });
+    y += 7;
+  });
+  pdf.setTextColor(17, 17, 17);
+
+  if (d.notes) {
+    y += 4;
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Notes:', left, y);
+    pdf.setFont('helvetica', 'normal');
+    const noteLines = pdf.splitTextToSize(d.notes, right - left);
+    pdf.text(noteLines, left, y + 5);
+    y += noteLines.length * 4 + 10;
+  }
+  y = Math.min(Math.max(y + 18, 235), 258);
+  pdf.setDrawColor(140, 140, 140);
+  pdf.line(left, y, 88, y);
+  pdf.line(122, y, right, y);
+  pdf.setFontSize(8);
+  pdf.text('Customer signature', 51, y + 5, { align: 'center' });
+  pdf.text(`For ${d.store.name}`, 159, y + 5, { align: 'center' });
+  pdf.setDrawColor(225, 225, 225);
+  pdf.line(left, 275, right, 275);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text(`${d.store.name}  |  ${d.store.tagline}  |  Tel ${d.store.phone}`, 105, 281, { align: 'center' });
+  pdf.text('Thank you for your business.', 105, 286, { align: 'center' });
+  pdf.save(`${fileName}.pdf`);
 }
 
 
