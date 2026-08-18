@@ -11,7 +11,7 @@ import { useCachedLogo } from '@/lib/offline';
 import { fetchProducts } from '@/lib/db';
 import { Product } from '@/types';
 import { STORE_INFO } from '@/components/pos/ThermalReceipt';
-import { A4Line, buildA4Html, openA4Pdf } from '@/lib/a4Doc';
+import { A4Line, buildA4Html, downloadA4Pdf } from '@/lib/a4Doc';
 
 type Line = A4Line & { id: string };
 
