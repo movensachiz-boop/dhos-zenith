@@ -67,40 +67,21 @@ export default function Quotations() {
       return;
     }
     const now = new Date();
+    const number = docNo(kind === 'quote' ? 'QT' : 'UP');
     const html = buildA4Html({
       docTitle: kind === 'quote' ? 'QUOTATION' : 'UPFRONT PAYMENT',
-      docNumber: docNo(kind === 'quote' ? 'QT' : 'UP'),
-      date: now,
-      validUntil:
-        kind === 'quote' ? new Date(now.getTime() + Number(validDays || 0) * 86400000) : undefined,
-      customerName,
-      customerPhone,
-      customerNumber,
-      customerAddress,
-      lines: validLines.map(({ description, quantity, unitPrice }) => ({
-        description,
-        quantity: Number(quantity),
-        unitPrice: Number(unitPrice),
-      })),
-      subtotal,
-      discount: Number(discount) || undefined,
-      total,
-      amountPaid: kind === 'upfront' ? Number(deposit) : undefined,
-      balanceDue: kind === 'upfront' ? balance : undefined,
-      paymentMethod: kind === 'upfront' ? paymentMethod : undefined,
-      notes:
-        kind === 'upfront'
-          ? [
-              collectionDate ? `Collection / delivery date: ${collectionDate}` : '',
-              notes,
-            ]
-              .filter(Boolean)
-              .join('\n')
-          : notes,
+      docNumber: number,
+...
       logoSrc,
       store: STORE_INFO,
     });
-    openA4Pdf(html);
+    try {
+      await downloadA4Pdf(html, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
+      toast({ title: 'PDF downloaded' });
+    } catch (e) {
+      toast({ title: 'Could not generate PDF', description: (e as Error).message, variant: 'destructive' });
+    }
+
   };
 
   return (
