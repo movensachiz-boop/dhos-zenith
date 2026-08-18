@@ -29,6 +29,7 @@ const navigation = [
   { name: 'Transporters', href: '/transporters', icon: Truck },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Invoices', href: '/invoices', icon: FileText },
+  { name: 'Quotations', href: '/quotations', icon: FileText },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help', href: '/help', icon: HelpCircle },
