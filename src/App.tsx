@@ -14,6 +14,7 @@ import Suppliers from "./pages/Suppliers";
 import Transporters from "./pages/Transporters";
 import Reports from "./pages/Reports";
 import Invoices from "./pages/Invoices";
+import Quotations from "./pages/Quotations";
 import Audit from "./pages/Audit";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,7 @@ const AppRoutes = () => {
       <Route path="/transporters" element={<ProtectedRoute><AppLayout><Transporters /></AppLayout></ProtectedRoute>} />
       <Route path="/reports" element={<ProtectedRoute><AppLayout><Reports /></AppLayout></ProtectedRoute>} />
       <Route path="/invoices" element={<ProtectedRoute><AppLayout><Invoices /></AppLayout></ProtectedRoute>} />
+      <Route path="/quotations" element={<ProtectedRoute><AppLayout><Quotations /></AppLayout></ProtectedRoute>} />
       <Route path="/audit" element={<ProtectedRoute><AppLayout><Audit /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
 
