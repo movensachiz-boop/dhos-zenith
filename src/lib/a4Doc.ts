@@ -137,10 +137,12 @@ export async function downloadA4Pdf(html: string, fileName: string) {
   const holder = document.createElement('div');
   // The source must remain fully painted. opacity: 0 / visibility: hidden are
   // inherited by html2canvas and produce a valid but completely blank PDF.
-  holder.style.position = 'absolute';
+  holder.style.position = 'fixed';
   holder.style.left = '0';
   holder.style.top = '0';
-  holder.style.zIndex = '-10000';
+  // Keep the export sheet above the app while html2canvas paints it. A negative
+  // stacking level causes Chromium to omit it from the captured canvas.
+  holder.style.zIndex = '2147483647';
   holder.style.pointerEvents = 'none';
   holder.style.width = '794px'; // A4 @96dpi
   holder.style.minHeight = '1123px';
