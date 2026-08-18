@@ -135,14 +135,15 @@ export async function downloadA4Pdf(html: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
 
   const holder = document.createElement('div');
-  // Keep it inside the viewport (html2canvas renders blank for far off-screen nodes)
-  holder.style.position = 'fixed';
+  // The source must remain fully painted. opacity: 0 / visibility: hidden are
+  // inherited by html2canvas and produce a valid but completely blank PDF.
+  holder.style.position = 'absolute';
   holder.style.left = '0';
   holder.style.top = '0';
-  holder.style.zIndex = '-1';
-  holder.style.opacity = '0';
+  holder.style.zIndex = '-10000';
   holder.style.pointerEvents = 'none';
   holder.style.width = '794px'; // A4 @96dpi
+  holder.style.minHeight = '1123px';
   holder.style.background = '#ffffff';
   holder.style.color = '#111111';
 
@@ -184,9 +185,12 @@ export async function downloadA4Pdf(html: string, fileName: string) {
         html2canvas: {
           scale: 2,
           useCORS: true,
+          allowTaint: true,
           backgroundColor: '#ffffff',
           logging: false,
           windowWidth: 794,
+          scrollX: 0,
+          scrollY: 0,
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       })
