@@ -11,7 +11,7 @@ import { useCachedLogo } from '@/lib/offline';
 import { fetchProducts } from '@/lib/db';
 import { Product } from '@/types';
 import { STORE_INFO } from '@/components/pos/ThermalReceipt';
-import { A4Line, buildA4Html, openA4Pdf } from '@/lib/a4Doc';
+import { A4Line, buildA4Html, downloadA4Pdf } from '@/lib/a4Doc';
 
 type Line = A4Line & { id: string };
 
@@ -57,7 +57,7 @@ export default function Quotations() {
 
   const validLines = lines.filter(l => l.description.trim() && Number(l.quantity) > 0);
 
-  const generate = (kind: 'quote' | 'upfront') => {
+  const generate = async (kind: 'quote' | 'upfront') => {
     if (validLines.length === 0) {
       toast({ title: 'Add at least one item', variant: 'destructive' });
       return;
@@ -67,9 +67,10 @@ export default function Quotations() {
       return;
     }
     const now = new Date();
+    const number = docNo(kind === 'quote' ? 'QT' : 'UP');
     const html = buildA4Html({
       docTitle: kind === 'quote' ? 'QUOTATION' : 'UPFRONT PAYMENT',
-      docNumber: docNo(kind === 'quote' ? 'QT' : 'UP'),
+      docNumber: number,
       date: now,
       validUntil:
         kind === 'quote' ? new Date(now.getTime() + Number(validDays || 0) * 86400000) : undefined,
@@ -90,17 +91,20 @@ export default function Quotations() {
       paymentMethod: kind === 'upfront' ? paymentMethod : undefined,
       notes:
         kind === 'upfront'
-          ? [
-              collectionDate ? `Collection / delivery date: ${collectionDate}` : '',
-              notes,
-            ]
+          ? [collectionDate ? `Collection / delivery date: ${collectionDate}` : '', notes]
               .filter(Boolean)
               .join('\n')
           : notes,
       logoSrc,
       store: STORE_INFO,
     });
-    openA4Pdf(html);
+    try {
+      await downloadA4Pdf(html, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
+      toast({ title: 'PDF downloaded' });
+    } catch (e) {
+      toast({ title: 'Could not generate PDF', description: (e as Error).message, variant: 'destructive' });
+    }
+
   };
 
   return (

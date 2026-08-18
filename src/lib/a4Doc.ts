@@ -131,6 +131,40 @@ export function buildA4Html(d: A4DocInput) {
   </body></html>`;
 }
 
+export async function downloadA4Pdf(html: string, fileName: string) {
+  const html2pdf = (await import('html2pdf.js')).default;
+  const holder = document.createElement('div');
+  holder.style.position = 'fixed';
+  holder.style.left = '-10000px';
+  holder.style.top = '0';
+  holder.style.width = '210mm';
+  holder.style.background = '#fff';
+  holder.innerHTML = html.replace(/^[\s\S]*<body[^>]*>/i, '').replace(/<\/body>[\s\S]*$/i, '');
+
+  const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
+  if (styleMatch) {
+    const style = document.createElement('style');
+    style.textContent = styleMatch[1];
+    holder.prepend(style);
+  }
+  document.body.appendChild(holder);
+
+  try {
+    await html2pdf()
+      .set({
+        margin: 10,
+        filename: `${fileName}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      })
+      .from(holder)
+      .save();
+  } finally {
+    holder.remove();
+  }
+}
+
 export function openA4Pdf(html: string) {
   const win = window.open('', '_blank', 'width=900,height=1200');
   if (!win) return;
@@ -139,3 +173,4 @@ export function openA4Pdf(html: string) {
   win.focus();
   setTimeout(() => win.print(), 600);
 }
+
