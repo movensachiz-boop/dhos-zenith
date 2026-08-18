@@ -230,7 +230,8 @@ export async function downloadA4Pdf(d: A4DocInput, fileName: string) {
   ];
   totals.forEach(([label, value, strong]) => {
     pdf.setFont('helvetica', strong ? 'bold' : 'normal');
-    pdf.setTextColor(...(strong ? pink : ([17, 17, 17] as const)));
+    if (strong) pdf.setTextColor(...pink);
+    else pdf.setTextColor(17, 17, 17);
     pdf.text(label, 140, y);
     pdf.text(value, right, y, { align: 'right' });
     y += 7;
