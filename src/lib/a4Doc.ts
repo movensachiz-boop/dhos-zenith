@@ -133,21 +133,47 @@ export function buildA4Html(d: A4DocInput) {
 
 export async function downloadA4Pdf(html: string, fileName: string) {
   const html2pdf = (await import('html2pdf.js')).default;
-  const holder = document.createElement('div');
-  holder.style.position = 'fixed';
-  holder.style.left = '-10000px';
-  holder.style.top = '0';
-  holder.style.width = '210mm';
-  holder.style.background = '#fff';
-  holder.innerHTML = html.replace(/^[\s\S]*<body[^>]*>/i, '').replace(/<\/body>[\s\S]*$/i, '');
 
+  const holder = document.createElement('div');
+  // Keep it inside the viewport (html2canvas renders blank for far off-screen nodes)
+  holder.style.position = 'fixed';
+  holder.style.left = '0';
+  holder.style.top = '0';
+  holder.style.zIndex = '-1';
+  holder.style.opacity = '0';
+  holder.style.pointerEvents = 'none';
+  holder.style.width = '794px'; // A4 @96dpi
+  holder.style.background = '#ffffff';
+  holder.style.color = '#111111';
+
+  const body = html.replace(/^[\s\S]*<body[^>]*>/i, '').replace(/<\/body>[\s\S]*$/i, '');
   const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/i);
-  if (styleMatch) {
-    const style = document.createElement('style');
-    style.textContent = styleMatch[1];
-    holder.prepend(style);
-  }
+  const css = styleMatch ? styleMatch[1] : '';
+
+  // Scope the document CSS to the holder so app tokens (oklch etc.) don't leak in
+  holder.innerHTML = `<style>
+    #a4-pdf-holder, #a4-pdf-holder * { box-sizing: border-box; color: #111; }
+    #a4-pdf-holder { font-family: Arial, Helvetica, sans-serif; font-size: 12px; background:#fff; padding: 8px; }
+    ${css.replace(/@page[^}]*}/g, '').replace(/\bbody\b/g, '#a4-pdf-holder')}
+  </style>${body}`;
+  holder.id = 'a4-pdf-holder';
+
   document.body.appendChild(holder);
+
+  // Wait for images (logo) to finish loading, otherwise the canvas is blank
+  const imgs = Array.from(holder.querySelectorAll('img'));
+  await Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && img.naturalWidth > 0) return resolve();
+          img.addEventListener('load', () => resolve(), { once: true });
+          img.addEventListener('error', () => resolve(), { once: true });
+          setTimeout(resolve, 4000);
+        })
+    )
+  );
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))));
 
   try {
     await html2pdf()
@@ -155,7 +181,13 @@ export async function downloadA4Pdf(html: string, fileName: string) {
         margin: 10,
         filename: `${fileName}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: 794,
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       })
       .from(holder)
@@ -164,6 +196,7 @@ export async function downloadA4Pdf(html: string, fileName: string) {
     holder.remove();
   }
 }
+
 
 export function openA4Pdf(html: string) {
   const win = window.open('', '_blank', 'width=900,height=1200');
