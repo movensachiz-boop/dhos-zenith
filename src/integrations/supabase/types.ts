@@ -113,6 +113,42 @@ export type Database = {
         }
         Relationships: []
       }
+      money_rounds: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          monthly_amount: number
+          name: string
+          notes: string | null
+          start_month: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_amount?: number
+          name: string
+          notes?: string | null
+          start_month: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_amount?: number
+          name?: string
+          notes?: string | null
+          start_month?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           barcode: string | null
@@ -196,6 +232,101 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      round_entries: {
+        Row: {
+          amount: number
+          created_at: string
+          direction: string
+          id: string
+          member_id: string | null
+          member_name: string
+          month: string
+          month_index: number
+          note: string | null
+          receipt_number: string
+          round_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          direction: string
+          id?: string
+          member_id?: string | null
+          member_name: string
+          month: string
+          month_index: number
+          note?: string | null
+          receipt_number: string
+          round_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          member_id?: string | null
+          member_name?: string
+          month?: string
+          month_index?: number
+          note?: string | null
+          receipt_number?: string
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_entries_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "round_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "round_entries_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "money_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      round_members: {
+        Row: {
+          created_at: string
+          id: string
+          is_me: boolean
+          name: string
+          phone: string | null
+          position: number
+          round_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_me?: boolean
+          name: string
+          phone?: string | null
+          position: number
+          round_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_me?: boolean
+          name?: string
+          phone?: string | null
+          position?: number
+          round_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_members_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "money_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_items: {
         Row: {
