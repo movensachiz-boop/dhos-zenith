@@ -11,7 +11,8 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  HelpCircle
+  HelpCircle,
+  PiggyBank
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Invoices', href: '/invoices', icon: FileText },
   { name: 'Quotations', href: '/quotations', icon: FileText },
+  { name: 'Money Round', href: '/money-round', icon: PiggyBank },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help', href: '/help', icon: HelpCircle },
