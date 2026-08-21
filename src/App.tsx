@@ -19,6 +19,7 @@ import Audit from "./pages/Audit";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Help from "./pages/Help";
+import MoneyRound from "./pages/MoneyRound";
 import Auth from "./pages/Auth";
 
 import { Loader2 } from "lucide-react";
