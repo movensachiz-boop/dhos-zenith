@@ -108,6 +108,8 @@ export interface DashboardMetrics {
   lowStockItems: number;
   pendingDeliveries: number;
   outstandingReceivables: number;
+  upfrontReceived: number;
+  orderBalances: number;
 }
 
 export interface Category {
