@@ -98,6 +98,39 @@ export default function Quotations() {
       logoSrc,
       store: STORE_INFO,
     };
+    if (kind === 'upfront') {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const { error } = await supabase.from('sales').insert({
+          receipt_number: number,
+          doc_type: 'upfront',
+          subtotal,
+          vat_amount: 0,
+          discount: Number(discount) || 0,
+          total,
+          amount_paid: Number(deposit) || 0,
+          balance_due: balance,
+          payment_method: paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+          status: balance > 0 ? 'partial' : 'completed',
+          client_name: customerName || null,
+          client_phone: customerPhone || null,
+          customer_number: customerNumber || null,
+          notes: notes || null,
+          due_date: collectionDate || null,
+          cashier_id: auth.user?.id ?? null,
+          cashier_name: auth.user?.email ?? null,
+        });
+        if (error) throw error;
+        toast({ title: 'Upfront payment recorded' });
+      } catch (e) {
+        toast({
+          title: 'Saved offline only',
+          description: `Could not record the payment: ${(e as Error).message}`,
+          variant: 'destructive',
+        });
+      }
+    }
+
     try {
       await downloadA4Pdf(documentData, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
       toast({ title: 'PDF downloaded' });
