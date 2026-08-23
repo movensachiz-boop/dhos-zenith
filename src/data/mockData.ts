@@ -15,6 +15,8 @@ export const mockDashboardMetrics: DashboardMetrics = {
   lowStockItems: 0,
   pendingDeliveries: 0,
   outstandingReceivables: 0,
+  upfrontReceived: 0,
+  orderBalances: 0,
 };
 
 export const mockRecentTransactions: Transaction[] = [];
