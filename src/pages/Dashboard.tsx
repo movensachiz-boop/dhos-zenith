@@ -22,7 +22,12 @@ const emptyMetrics: DashboardMetrics = {
   lowStockItems: 0,
   pendingDeliveries: 0,
   outstandingReceivables: 0,
+  upfrontReceived: 0,
+  orderBalances: 0,
 };
+
+const receivedAmount = (s: { doc_type?: string | null; total: number | string; amount_paid?: number | string | null }) =>
+  s.doc_type === 'upfront' ? Number(s.amount_paid ?? 0) : Number(s.total);
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics>(emptyMetrics);
