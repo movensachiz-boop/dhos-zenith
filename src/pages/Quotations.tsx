@@ -9,6 +9,7 @@ import { toast } from '@/hooks/use-toast';
 import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
 import { useCachedLogo } from '@/lib/offline';
 import { fetchProducts } from '@/lib/db';
+import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
 import { STORE_INFO } from '@/components/pos/ThermalReceipt';
 import { A4DocInput, A4Line, downloadA4Pdf } from '@/lib/a4Doc';
