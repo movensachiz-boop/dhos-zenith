@@ -384,6 +384,8 @@ export type Database = {
       }
       sales: {
         Row: {
+          amount_paid: number
+          balance_due: number
           cashier_id: string | null
           cashier_name: string | null
           client_id: string | null
@@ -394,7 +396,9 @@ export type Database = {
           customer_number: string | null
           discount: number
           doc_type: string
+          due_date: string | null
           id: string
+          notes: string | null
           payment_method: string
           receipt_number: string
           referral_code: string | null
@@ -404,6 +408,8 @@ export type Database = {
           vat_amount: number
         }
         Insert: {
+          amount_paid?: number
+          balance_due?: number
           cashier_id?: string | null
           cashier_name?: string | null
           client_id?: string | null
@@ -414,7 +420,9 @@ export type Database = {
           customer_number?: string | null
           discount?: number
           doc_type?: string
+          due_date?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string
           receipt_number: string
           referral_code?: string | null
@@ -424,6 +432,8 @@ export type Database = {
           vat_amount?: number
         }
         Update: {
+          amount_paid?: number
+          balance_due?: number
           cashier_id?: string | null
           cashier_name?: string | null
           client_id?: string | null
@@ -434,7 +444,9 @@ export type Database = {
           customer_number?: string | null
           discount?: number
           doc_type?: string
+          due_date?: string | null
           id?: string
+          notes?: string | null
           payment_method?: string
           receipt_number?: string
           referral_code?: string | null
