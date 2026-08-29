@@ -62,6 +62,10 @@ export default function Quotations() {
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [collectionDate, setCollectionDate] = useState('');
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingNumber, setEditingNumber] = useState<string | null>(null);
+
+
   const loadSaved = useCallback(async () => {
     const { data, error } = await supabase
       .from('quotations')
