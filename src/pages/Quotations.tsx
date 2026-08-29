@@ -459,7 +459,7 @@ export default function Quotations() {
             </div>
           </div>
           <Button variant="pos" onClick={() => generate('quote')}>
-            <FileDown className="h-4 w-4 mr-2" /> Generate quotation PDF
+            <FileDown className="h-4 w-4 mr-2" /> {editingId ? 'Update quotation & download PDF' : 'Generate quotation PDF'}
           </Button>
         </TabsContent>
 
