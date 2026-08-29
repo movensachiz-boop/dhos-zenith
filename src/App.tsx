@@ -20,6 +20,7 @@ import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Help from "./pages/Help";
 import MoneyRound from "./pages/MoneyRound";
+import Bills from "./pages/Bills";
 import Auth from "./pages/Auth";
 
 import { Loader2 } from "lucide-react";
@@ -61,6 +62,7 @@ const AppRoutes = () => {
       <Route path="/audit" element={<ProtectedRoute><AppLayout><Audit /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/money-round" element={<ProtectedRoute><AppLayout><MoneyRound /></AppLayout></ProtectedRoute>} />
+      <Route path="/bills" element={<ProtectedRoute><AppLayout><Bills /></AppLayout></ProtectedRoute>} />
 
 
       <Route path="/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />

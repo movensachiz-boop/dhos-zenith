@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logAudit } from '@/lib/db';
 import { printReceiptHtml } from '@/lib/receiptPrint';
 import { RoundReceipt, RoundReceiptData } from '@/components/round/RoundReceipt';
+import { countdownTo, cycleDate, nextCycleDate, useNow } from '@/lib/countdown';
 
 type Round = {
   id: string;
@@ -18,6 +19,8 @@ type Round = {
   start_month: string;
   currency: string;
   notes: string | null;
+  cycle_days: number;
+  start_date: string | null;
 };
 
 type Member = {
@@ -51,6 +54,7 @@ const addMonths = (iso: string, n: number) => {
 };
 const monthLabel = (d: Date) => d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 const receiptNo = (prefix: string) => `${prefix}-${Date.now().toString().slice(-6)}`;
+const dayLabel = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function MoneyRound() {
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -58,9 +62,16 @@ export default function MoneyRound() {
   const [members, setMembers] = useState<Member[]>([]);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expenses, setExpenses] = useState<{ amount: number; paid_on: string }[]>([]);
+  const now = useNow(30000);
 
   const [roundOpen, setRoundOpen] = useState(false);
-  const [roundForm, setRoundForm] = useState({ name: '', monthly_amount: '100', start_month: monthKey(new Date()).slice(0, 7) });
+  const [roundForm, setRoundForm] = useState({
+    name: '',
+    monthly_amount: '100',
+    start_date: new Date().toISOString().slice(0, 10),
+    cycle_days: '30',
+  });
   const [memberOpen, setMemberOpen] = useState(false);
   const [memberForm, setMemberForm] = useState({ name: '', phone: '', is_me: false });
   const [saving, setSaving] = useState(false);
@@ -88,21 +99,36 @@ export default function MoneyRound() {
     setEntries((e.data ?? []) as unknown as Entry[]);
   };
 
-  useEffect(() => { loadRounds(); }, []);
+  useEffect(() => {
+    loadRounds();
+    supabase
+      .from('expenses')
+      .select('amount, paid_on')
+      .then(({ data }) => setExpenses(((data ?? []) as { amount: number; paid_on: string }[])));
+  }, []);
   useEffect(() => { if (activeId) loadDetail(activeId); else { setMembers([]); setEntries([]); } }, [activeId]);
 
   const memberCount = members.length;
   const monthly = Number(round?.monthly_amount ?? 0);
   const payoutAmount = monthly * Math.max(memberCount - 1, 0);
   const poolPerMonth = monthly * memberCount;
+  const cycleDays = Math.max(1, Number(round?.cycle_days ?? 30));
+  const startBase = round ? (round.start_date ?? round.start_month) : null;
+  const periodLabel = (d: Date) => (cycleDays >= 28 ? monthLabel(d) : dayLabel(d));
+
+  const nextCycle = useMemo(() => {
+    if (!startBase) return null;
+    const { date, cycleIndex } = nextCycleDate(startBase, cycleDays, now);
+    return { date, cycleIndex, countdown: countdownTo(date, now) };
+  }, [startBase, cycleDays, now]);
 
   const schedule = useMemo(() => {
-    if (!round) return [];
+    if (!round || !startBase) return [];
     return members.map(mem => {
-      const date = addMonths(round.start_month, mem.position - 1);
-      return { member: mem, monthIndex: mem.position, date, label: monthLabel(date) };
+      const date = cycleDate(startBase, cycleDays, mem.position);
+      return { member: mem, monthIndex: mem.position, date, label: periodLabel(date) };
     });
-  }, [members, round]);
+  }, [members, round, startBase, cycleDays]);
 
   const me = members.find(m => m.is_me) ?? null;
 
@@ -110,17 +136,17 @@ export default function MoneyRound() {
     if (!round || !me) return [];
     return Array.from({ length: memberCount }, (_, i) => {
       const idx = i + 1;
-      const date = addMonths(round.start_month, i);
+      const date = cycleDate(startBase!, cycleDays, idx);
       const isPayout = me.position === idx;
       return {
         monthIndex: idx,
         date,
-        label: monthLabel(date),
+        label: periodLabel(date),
         direction: (isPayout ? 'in' : 'out') as 'in' | 'out',
         amount: isPayout ? payoutAmount : monthly,
       };
     });
-  }, [round, me, memberCount, payoutAmount, monthly]);
+  }, [round, me, memberCount, payoutAmount, monthly, startBase, cycleDays]);
 
   const recorded = (memberId: string, monthIndex: number) =>
     entries.find(e => e.member_id === memberId && e.month_index === monthIndex);
@@ -133,13 +159,15 @@ export default function MoneyRound() {
       user_id: auth.user!.id,
       name: roundForm.name.trim(),
       monthly_amount: Number(roundForm.monthly_amount) || 0,
-      start_month: `${roundForm.start_month}-01`,
+      start_month: `${roundForm.start_date.slice(0, 7)}-01`,
+      start_date: roundForm.start_date,
+      cycle_days: Number(roundForm.cycle_days) || 30,
     }).select().single();
     setSaving(false);
     if (error) return toast({ title: 'Could not create round', description: error.message, variant: 'destructive' });
     await logAudit('create', 'money_rounds', (data as { id: string }).id, { name: roundForm.name });
     setRoundOpen(false);
-    setRoundForm({ name: '', monthly_amount: '100', start_month: monthKey(new Date()).slice(0, 7) });
+    setRoundForm({ name: '', monthly_amount: '100', start_date: new Date().toISOString().slice(0, 10), cycle_days: '30' });
     await loadRounds();
     setActiveId((data as { id: string }).id);
   };
@@ -214,7 +242,7 @@ export default function MoneyRound() {
       roundName: round?.name ?? '',
       memberName: e.member_name,
       memberPhone: mem?.phone ?? undefined,
-      monthLabel: monthLabel(addMonths(e.month, 0)),
+      monthLabel: periodLabel(addMonths(e.month, 0)),
       monthIndex: e.month_index,
       direction: e.direction,
       amount: Number(e.amount),
@@ -226,6 +254,20 @@ export default function MoneyRound() {
   const totalIn = entries.filter(e => e.direction === 'in').reduce((s, e) => s + Number(e.amount), 0);
   const totalOut = entries.filter(e => e.direction === 'out').reduce((s, e) => s + Number(e.amount), 0);
 
+  const roundExpenses = useMemo(() => {
+    if (!startBase) return 0;
+    const start = new Date(startBase).getTime();
+    const end = new Date(startBase).getTime() + Math.max(memberCount, 1) * cycleDays * 86400000;
+    return expenses
+      .filter(x => {
+        const t = new Date(x.paid_on).getTime();
+        return t >= start && t <= end;
+      })
+      .reduce((s, x) => s + Number(x.amount), 0);
+  }, [expenses, startBase, memberCount, cycleDays]);
+
+  const netProfit = totalIn - totalOut - roundExpenses;
+
   if (loading) {
     return <div className="flex justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
@@ -235,7 +277,7 @@ export default function MoneyRound() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Money Round</h1>
-          <p className="text-muted-foreground">Pooled monthly savings — payout schedule, cash in / cash out and receipts.</p>
+          <p className="text-muted-foreground">Pooled savings — cycle countdown, payout schedule, cash in / cash out and receipts.</p>
         </div>
         <Button variant="pos" onClick={() => setRoundOpen(true)}><Plus className="mr-2 h-5 w-5" /> New round</Button>
       </div>
@@ -258,9 +300,9 @@ export default function MoneyRound() {
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { label: 'Monthly contribution', value: money(monthly) },
+                  { label: `Contribution / ${cycleDays} days`, value: money(monthly) },
                   { label: 'Members', value: String(memberCount) },
-                  { label: 'Pool per month', value: money(poolPerMonth) },
+                  { label: 'Pool per cycle', value: money(poolPerMonth) },
                   { label: 'Payout per member', value: money(payoutAmount) },
                 ].map(c => (
                   <div key={c.label} className="rounded-xl border bg-card p-4">
@@ -268,6 +310,45 @@ export default function MoneyRound() {
                     <p className="mt-1 text-xl font-bold">{c.value}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Countdown & profit */}
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-xl border bg-card p-5">
+                  <p className="text-xs uppercase text-muted-foreground">Next cycle in</p>
+                  <p className={`mt-1 text-3xl font-bold ${nextCycle?.countdown?.overdue ? 'text-destructive' : 'text-primary'}`}>
+                    {nextCycle?.countdown
+                      ? `${nextCycle.countdown.days}d ${nextCycle.countdown.hours}h`
+                      : '—'}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {nextCycle ? `Cycle #${nextCycle.cycleIndex} on ${dayLabel(nextCycle.date)} · every ${cycleDays} days` : ''}
+                  </p>
+                  {me && nextCycle ? (
+                    <p className="mt-3 text-sm">
+                      {me.position === nextCycle.cycleIndex ? (
+                        <span className="font-bold text-primary">Your turn — you receive {money(payoutAmount)}</span>
+                      ) : (
+                        <>You pay <span className="font-bold">{money(monthly)}</span> this cycle. Your payout ({money(payoutAmount)}) lands on{' '}
+                        <span className="font-bold">{dayLabel(cycleDate(startBase!, cycleDays, me.position))}</span>.</>
+                      )}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="rounded-xl border bg-card p-5">
+                  <p className="text-xs uppercase text-muted-foreground">Round profitability</p>
+                  <p className={`mt-1 text-3xl font-bold ${netProfit >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {netProfit >= 0 ? '+' : '-'}{money(Math.abs(netProfit))}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {netProfit >= 0 ? 'Profit after contributions and bills' : 'Loss after contributions and bills'}
+                  </p>
+                  <div className="mt-3 space-y-1 text-sm">
+                    <div className="flex justify-between"><span>Cash in (payouts)</span><span className="font-semibold text-primary">+{money(totalIn)}</span></div>
+                    <div className="flex justify-between"><span>Cash out (contributions)</span><span className="font-semibold">-{money(totalOut)}</span></div>
+                    <div className="flex justify-between"><span>Bills &amp; expenses in period</span><span className="font-semibold">-{money(roundExpenses)}</span></div>
+                  </div>
+                </div>
               </div>
 
               {/* Members & payout months */}
@@ -283,7 +364,7 @@ export default function MoneyRound() {
                     <table className="data-table w-full">
                       <thead>
                         <tr>
-                          <th>#</th><th>Member</th><th>Contact</th><th>Payout month</th><th>Receives</th><th>Status</th><th></th>
+                          <th>#</th><th>Member</th><th>Contact</th><th>Payout date</th><th>Receives</th><th>Status</th><th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -322,13 +403,13 @@ export default function MoneyRound() {
                 <div className="border-b p-4">
                   <h2 className="font-semibold">My cash flow {me ? `— ${me.name} (position ${me.position})` : ''}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {me ? 'Your payout month is cash in, every other month is cash out.' : 'Mark one member as "This is me" to see your cash flow.'}
+                    {me ? 'Your payout cycle is cash in, every other cycle is cash out.' : 'Mark one member as "This is me" to see your cash flow.'}
                   </p>
                 </div>
                 {me && (
                   <div className="overflow-x-auto">
                     <table className="data-table w-full">
-                      <thead><tr><th>Month #</th><th>Month</th><th>Type</th><th>Amount</th><th></th></tr></thead>
+                      <thead><tr><th>Cycle #</th><th>Date</th><th>Type</th><th>Amount</th><th></th></tr></thead>
                       <tbody>
                         {myCashflow.map(row => (
                           <tr key={row.monthIndex}>
@@ -373,7 +454,7 @@ export default function MoneyRound() {
                           <tr key={e.id}>
                             <td className="font-mono text-xs">{e.receipt_number}</td>
                             <td>{e.member_name}</td>
-                            <td>{monthLabel(addMonths(e.month, 0))}</td>
+                            <td>{periodLabel(addMonths(e.month, 0))}</td>
                             <td>{e.direction === 'in' ? 'Cash in' : 'Cash out'}</td>
                             <td className={e.direction === 'in' ? 'font-bold text-primary' : ''}>
                               {e.direction === 'in' ? '+' : '-'}{money(Number(e.amount))}
@@ -403,12 +484,17 @@ export default function MoneyRound() {
               <Input value={roundForm.name} onChange={e => setRoundForm({ ...roundForm, name: e.target.value })} placeholder="e.g. Maita Round 2026" />
             </div>
             <div className="space-y-2">
-              <Label>Monthly amount per member ($)</Label>
+              <Label>Amount per member per cycle ($)</Label>
               <Input type="number" value={roundForm.monthly_amount} onChange={e => setRoundForm({ ...roundForm, monthly_amount: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Start month</Label>
-              <Input type="month" value={roundForm.start_month} onChange={e => setRoundForm({ ...roundForm, start_month: e.target.value })} />
+              <Label>Cycle length (days)</Label>
+              <Input type="number" min={1} value={roundForm.cycle_days} onChange={e => setRoundForm({ ...roundForm, cycle_days: e.target.value })} />
+              <p className="text-xs text-muted-foreground">e.g. 6 means money circulates every 6 days; 30 keeps it monthly.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Start date</Label>
+              <Input type="date" value={roundForm.start_date} onChange={e => setRoundForm({ ...roundForm, start_date: e.target.value })} />
             </div>
           </div>
           <DialogFooter>

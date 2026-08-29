@@ -113,14 +113,61 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          paid_on: string
+          payment_method: string
+          receipt_number: string
+          title: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_on?: string
+          payment_method?: string
+          receipt_number: string
+          title: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_on?: string
+          payment_method?: string
+          receipt_number?: string
+          title?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: []
+      }
       money_rounds: {
         Row: {
           created_at: string
           currency: string
+          cycle_days: number
           id: string
           monthly_amount: number
           name: string
           notes: string | null
+          start_date: string | null
           start_month: string
           updated_at: string
           user_id: string
@@ -128,10 +175,12 @@ export type Database = {
         Insert: {
           created_at?: string
           currency?: string
+          cycle_days?: number
           id?: string
           monthly_amount?: number
           name: string
           notes?: string | null
+          start_date?: string | null
           start_month: string
           updated_at?: string
           user_id: string
@@ -139,10 +188,12 @@ export type Database = {
         Update: {
           created_at?: string
           currency?: string
+          cycle_days?: number
           id?: string
           monthly_amount?: number
           name?: string
           notes?: string | null
+          start_date?: string | null
           start_month?: string
           updated_at?: string
           user_id?: string
@@ -160,6 +211,7 @@ export type Database = {
           id: string
           low_stock_threshold: number
           name: string
+          product_type: string
           selling_price: number
           sku: string
           stock_tracking_enabled: boolean
@@ -177,6 +229,7 @@ export type Database = {
           id?: string
           low_stock_threshold?: number
           name: string
+          product_type?: string
           selling_price?: number
           sku: string
           stock_tracking_enabled?: boolean
@@ -194,6 +247,7 @@ export type Database = {
           id?: string
           low_stock_threshold?: number
           name?: string
+          product_type?: string
           selling_price?: number
           sku?: string
           stock_tracking_enabled?: boolean
@@ -230,6 +284,75 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      quotations: {
+        Row: {
+          amount_paid: number
+          balance_due: number
+          created_at: string
+          created_by: string | null
+          customer_address: string | null
+          customer_name: string | null
+          customer_number: string | null
+          customer_phone: string | null
+          discount: number
+          doc_number: string
+          doc_type: string
+          due_date: string | null
+          id: string
+          lines: Json
+          notes: string | null
+          payment_method: string | null
+          subtotal: number
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          amount_paid?: number
+          balance_due?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_number?: string | null
+          customer_phone?: string | null
+          discount?: number
+          doc_number: string
+          doc_type?: string
+          due_date?: string | null
+          id?: string
+          lines?: Json
+          notes?: string | null
+          payment_method?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          balance_due?: number
+          created_at?: string
+          created_by?: string | null
+          customer_address?: string | null
+          customer_name?: string | null
+          customer_number?: string | null
+          customer_phone?: string | null
+          discount?: number
+          doc_number?: string
+          doc_type?: string
+          due_date?: string | null
+          id?: string
+          lines?: Json
+          notes?: string | null
+          payment_method?: string | null
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
         }
         Relationships: []
       }

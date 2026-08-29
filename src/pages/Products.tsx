@@ -49,6 +49,7 @@ export default function Products() {
       sku: newProduct.sku,
       barcode: newProduct.barcode ?? null,
       category: newProduct.category,
+      product_type: newProduct.productType,
       cost_price: newProduct.costPrice,
       selling_price: newProduct.sellingPrice,
       vat_applicable: newProduct.vatApplicable,
@@ -148,6 +149,7 @@ export default function Products() {
                 <th>Product</th>
                 <th>SKU</th>
                 <th>Category</th>
+                <th>Type</th>
                 <th className="text-right">Cost</th>
                 <th className="text-right">Price</th>
                 <th className="text-center">Stock</th>
@@ -163,6 +165,14 @@ export default function Products() {
                   <td>
                     <span className="inline-flex px-2 py-1 rounded-md bg-muted text-xs font-medium">
                       {product.category}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={cn(
+                      'inline-flex px-2 py-1 rounded-md text-xs font-semibold capitalize',
+                      product.productType === 'cake' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                    )}>
+                      {product.productType === 'cake' ? 'Cake (order)' : 'Accessory (shop)'}
                     </span>
                   </td>
                   <td className="text-right font-medium">${product.costPrice.toFixed(2)}</td>

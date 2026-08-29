@@ -7,6 +7,7 @@ export type ProductRow = {
   sku: string;
   barcode: string | null;
   category: string;
+  product_type: string | null;
   cost_price: number;
   selling_price: number;
   vat_applicable: boolean;
@@ -24,6 +25,7 @@ export const rowToProduct = (r: ProductRow): Product => ({
   sku: r.sku,
   barcode: r.barcode ?? undefined,
   category: r.category,
+  productType: (r.product_type === 'cake' ? 'cake' : 'accessory'),
   costPrice: Number(r.cost_price),
   sellingPrice: Number(r.selling_price),
   vatApplicable: r.vat_applicable,

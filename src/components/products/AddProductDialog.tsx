@@ -33,6 +33,7 @@ const productSchema = z.object({
   sku: z.string().min(1, 'SKU is required').max(50),
   barcode: z.string().optional(),
   category: z.string().min(1, 'Category is required'),
+  productType: z.enum(['cake', 'accessory']),
   costPrice: z.coerce.number().min(0, 'Cost price must be positive'),
   sellingPrice: z.coerce.number().min(0, 'Selling price must be positive'),
   vatApplicable: z.boolean(),
@@ -66,6 +67,7 @@ export default function AddProductDialog({
       sku: '',
       barcode: '',
       category: '',
+      productType: 'accessory',
       costPrice: 0,
       sellingPrice: 0,
       vatApplicable: true,
@@ -83,6 +85,7 @@ export default function AddProductDialog({
       sku: data.sku,
       barcode: data.barcode || undefined,
       category: data.category,
+      productType: data.productType,
       costPrice: data.costPrice,
       sellingPrice: data.sellingPrice,
       vatApplicable: data.vatApplicable,
@@ -184,6 +187,28 @@ export default function AddProductDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="productType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Type *</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="cake">Cake (made per order)</SelectItem>
+                      <SelectItem value="accessory">Accessory (bought in shop)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
