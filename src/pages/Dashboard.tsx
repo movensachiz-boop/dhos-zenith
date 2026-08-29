@@ -119,13 +119,16 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening today.</p>
+    <div className="space-y-5 animate-fade-in">
+      <div className="flex flex-wrap items-end justify-between gap-2 border-b pb-4">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Overview of today's trading and outstanding orders.</p>
+        </div>
+        <p className="text-xs text-muted-foreground">{new Date(now).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Today's Cash In"
           value={`$${metrics.todaySales.toFixed(2)}`}
@@ -145,13 +148,15 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="rounded-xl border bg-card">
-        <div className="border-b p-4">
-          <h2 className="flex items-center gap-2 font-semibold"><Clock className="h-4 w-4" /> Upfront orders &amp; deadlines</h2>
-          <p className="text-sm text-muted-foreground">Countdown to each collection / delivery date from the upfront payment records.</p>
+      <div className="rounded-lg border bg-card">
+        <div className="border-b px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold"><Clock className="h-4 w-4 text-primary" /> Upfront orders &amp; deadlines</h2>
+          <p className="text-xs text-muted-foreground">Countdown to each collection / delivery date.</p>
         </div>
+
         {upfronts.length === 0 ? (
-          <p className="p-8 text-center text-muted-foreground">No upfront orders recorded yet.</p>
+          <p className="p-6 text-center text-sm text-muted-foreground">No upfront orders recorded yet.</p>
+
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table w-full">
@@ -181,11 +186,11 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2">
           <RecentTransactions transactions={recent} />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <QuickActions />
           <LowStockAlert products={products.filter(p => p.currentStock <= p.lowStockThreshold)} />
         </div>
