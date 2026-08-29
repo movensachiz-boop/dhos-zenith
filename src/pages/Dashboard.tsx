@@ -125,7 +125,7 @@ export default function Dashboard() {
           <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Overview of today's trading and outstanding orders.</p>
         </div>
-        <p className="text-xs text-muted-foreground">{now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <p className="text-xs text-muted-foreground">{new Date(now).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
