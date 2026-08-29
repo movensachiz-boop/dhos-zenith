@@ -190,6 +190,22 @@ export default function MoneyRound() {
     loadDetail(round.id);
   };
 
+  const deleteRound = async (r: Round) => {
+    if (!window.confirm(`Delete the round "${r.name}" and all its members, entries and receipts? This cannot be undone.`)) return;
+    setSaving(true);
+    await supabase.from('round_entries').delete().eq('round_id', r.id);
+    await supabase.from('round_members').delete().eq('round_id', r.id);
+    const { error } = await supabase.from('money_rounds').delete().eq('id', r.id);
+    setSaving(false);
+    if (error) return toast({ title: 'Could not delete round', description: error.message, variant: 'destructive' });
+    await logAudit('delete', 'money_rounds', r.id, { name: r.name });
+    toast({ title: 'Round cleared' });
+    setActiveId(null);
+    setMembers([]);
+    setEntries([]);
+    await loadRounds();
+  };
+
   const removeMember = async (id: string) => {
     if (!round) return;
     const { error } = await supabase.from('round_members').delete().eq('id', id);
@@ -198,6 +214,7 @@ export default function MoneyRound() {
     await Promise.all(remaining.map((m, i) => supabase.from('round_members').update({ position: i + 1 }).eq('id', m.id)));
     loadDetail(round.id);
   };
+
 
   const record = async (opts: {
     member: Member; monthIndex: number; date: Date; direction: 'in' | 'out'; amount: number;
@@ -288,13 +305,26 @@ export default function MoneyRound() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {rounds.map(r => (
-              <Button key={r.id} variant={r.id === activeId ? 'default' : 'outline'} size="sm" onClick={() => setActiveId(r.id)}>
-                {r.name}
-              </Button>
+              <div key={r.id} className="flex items-center gap-1 rounded-md border p-0.5">
+                <Button variant={r.id === activeId ? 'default' : 'ghost'} size="sm" onClick={() => setActiveId(r.id)}>
+                  {r.name}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  title="Delete round"
+                  disabled={saving}
+                  onClick={() => deleteRound(r)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
+
 
           {round && (
             <>
