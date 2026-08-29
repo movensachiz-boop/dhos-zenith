@@ -522,6 +522,9 @@ export default function Quotations() {
                       <td className={cd?.overdue ? 'text-destructive font-semibold' : ''}>{cd ? cd.label : '-'}</td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(d)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button size="sm" variant="outline" onClick={() => redownload(d)}>
                             <FileDown className="h-4 w-4" />
                           </Button>
