@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Loader2, Download } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Loader2, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,9 +150,14 @@ export default function Reports() {
           <h1 className="text-2xl font-bold">Reports</h1>
           <p className="text-muted-foreground">Sales performance and VAT summary</p>
         </div>
-        <Button variant="outline" onClick={exportCsv} disabled={filtered.length === 0}>
-          <Download className="h-4 w-4 mr-2" /> Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => load()}>
+            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+          </Button>
+          <Button variant="outline" onClick={exportCsv} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4 mr-2" /> Export CSV
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
