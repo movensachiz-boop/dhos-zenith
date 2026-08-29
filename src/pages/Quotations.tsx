@@ -110,7 +110,8 @@ export default function Quotations() {
       return;
     }
     const nowDate = new Date();
-    const number = docNo(kind === 'quote' ? 'QT' : 'UP');
+    const number = editingNumber ?? docNo(kind === 'quote' ? 'QT' : 'UP');
+
     const validUntil =
       kind === 'quote' ? new Date(nowDate.getTime() + Number(validDays || 0) * 86400000) : undefined;
     const docLines = validLines.map(({ description, quantity, unitPrice }) => ({
