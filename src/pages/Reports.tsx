@@ -43,22 +43,44 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState('30');
 
-  useEffect(() => {
-    (async () => {
-      const [salesRes, itemsRes, expensesRes, productList] = await Promise.all([
-        supabase.from('sales').select('*').order('created_at', { ascending: false }),
-        supabase.from('sale_items').select('*'),
-        supabase.from('expenses').select('amount, paid_on'),
-        fetchProducts().catch(() => [] as Product[]),
-      ]);
-      if (salesRes.error) toast({ title: 'Failed to load report data', description: salesRes.error.message, variant: 'destructive' });
-      else setSales((salesRes.data ?? []) as unknown as Sale[]);
-      setItems((itemsRes.data ?? []) as unknown as SaleItem[]);
-      setExpenses((expensesRes.data ?? []) as { amount: number; paid_on: string }[]);
-      setProducts(productList);
-      setLoading(false);
-    })();
+  const load = useCallback(async () => {
+    const [salesRes, itemsRes, expensesRes, productList] = await Promise.all([
+      supabase.from('sales').select('*').order('created_at', { ascending: false }),
+      supabase.from('sale_items').select('*'),
+      supabase.from('expenses').select('amount, paid_on'),
+      fetchProducts().catch(() => [] as Product[]),
+    ]);
+    if (salesRes.error) toast({ title: 'Failed to load report data', description: salesRes.error.message, variant: 'destructive' });
+    else setSales((salesRes.data ?? []) as unknown as Sale[]);
+    setItems((itemsRes.data ?? []) as unknown as SaleItem[]);
+    setExpenses((expensesRes.data ?? []) as { amount: number; paid_on: string }[]);
+    setProducts(productList);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    load();
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('reports-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sale_items' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [load]);
+
 
   const filtered = useMemo(() => {
     const def = ranges.find(r => r.key === range)!;
