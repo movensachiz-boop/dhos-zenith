@@ -186,11 +186,11 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2">
           <RecentTransactions transactions={recent} />
         </div>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <QuickActions />
           <LowStockAlert products={products.filter(p => p.currentStock <= p.lowStockThreshold)} />
         </div>
