@@ -340,6 +340,18 @@ export default function Quotations() {
         <p className="text-muted-foreground">Generate branded A4 PDFs for clients — every document is saved and can be re-downloaded</p>
       </div>
 
+      {editingId && (
+        <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 p-4">
+          <p className="text-sm">
+            Editing <strong className="font-mono">{editingNumber}</strong> — saving will update this document and re-download its PDF.
+          </p>
+          <Button variant="outline" size="sm" onClick={cancelEdit}>
+            <X className="h-4 w-4 mr-1" /> Cancel edit
+          </Button>
+        </div>
+      )}
+
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-card p-6 space-y-4">
           <h3 className="font-semibold">Customer details</h3>
