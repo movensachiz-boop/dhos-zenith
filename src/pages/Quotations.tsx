@@ -241,7 +241,57 @@ export default function Quotations() {
     }
   };
 
+  const startEdit = (doc: SavedDoc) => {
+    setEditingId(doc.id);
+    setEditingNumber(doc.doc_number);
+    setCustomerName(doc.customer_name ?? '');
+    setCustomerPhone(doc.customer_phone ?? '');
+    setCustomerNumber(doc.customer_number ?? '');
+    setCustomerAddress(doc.customer_address ?? '');
+    setLines(
+      (doc.lines ?? []).length
+        ? (doc.lines ?? []).map(l => ({
+            id: crypto.randomUUID(),
+            description: l.description,
+            quantity: Number(l.quantity),
+            unitPrice: Number(l.unitPrice),
+          }))
+        : [newLine()]
+    );
+    setDiscount(Number(doc.discount) || 0);
+    setNotes(doc.notes ?? '');
+    setDeposit(Number(doc.amount_paid) || 0);
+    setPaymentMethod(doc.payment_method ?? 'Cash');
+    setCollectionDate(doc.due_date ?? '');
+    if (doc.valid_until) {
+      const days = Math.max(
+        0,
+        Math.round((new Date(doc.valid_until).getTime() - new Date(doc.created_at).getTime()) / 86400000)
+      );
+      setValidDays(days || 14);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast({ title: `Editing ${doc.doc_number}` });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingNumber(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerNumber('');
+    setCustomerAddress('');
+    setLines([newLine()]);
+    setDiscount(0);
+    setDeposit(0);
+    setPaymentMethod('Cash');
+    setCollectionDate('');
+    setNotes('Quotation valid for 14 days. 50% upfront payment required to confirm an order.');
+    setValidDays(14);
+  };
+
   const redownload = async (doc: SavedDoc) => {
+
     const isUpfront = doc.doc_type === 'upfront';
     const input: A4DocInput = {
       docTitle: isUpfront ? 'UPFRONT PAYMENT' : 'QUOTATION',
