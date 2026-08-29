@@ -155,7 +155,8 @@ export default function Dashboard() {
         </div>
 
         {upfronts.length === 0 ? (
-          <p className="p-8 text-center text-muted-foreground">No upfront orders recorded yet.</p>
+          <p className="p-6 text-center text-sm text-muted-foreground">No upfront orders recorded yet.</p>
+
         ) : (
           <div className="overflow-x-auto">
             <table className="data-table w-full">
