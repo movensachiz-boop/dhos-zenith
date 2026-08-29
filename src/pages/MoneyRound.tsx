@@ -305,13 +305,26 @@ export default function MoneyRound() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {rounds.map(r => (
-              <Button key={r.id} variant={r.id === activeId ? 'default' : 'outline'} size="sm" onClick={() => setActiveId(r.id)}>
-                {r.name}
-              </Button>
+              <div key={r.id} className="flex items-center gap-1 rounded-md border p-0.5">
+                <Button variant={r.id === activeId ? 'default' : 'ghost'} size="sm" onClick={() => setActiveId(r.id)}>
+                  {r.name}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                  title="Delete round"
+                  disabled={saving}
+                  onClick={() => deleteRound(r)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             ))}
           </div>
+
 
           {round && (
             <>
