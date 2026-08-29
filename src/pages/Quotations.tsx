@@ -148,27 +148,32 @@ export default function Quotations() {
     const { data: auth } = await supabase.auth.getUser();
 
     // Save the document so it can always be re-downloaded later.
+    const record = {
+      doc_number: number,
+      doc_type: kind,
+      customer_name: customerName || null,
+      customer_phone: customerPhone || null,
+      customer_number: customerNumber || null,
+      customer_address: customerAddress || null,
+      lines: docLines as never,
+      subtotal,
+      discount: Number(discount) || 0,
+      total,
+      amount_paid: kind === 'upfront' ? Number(deposit) || 0 : 0,
+      balance_due: kind === 'upfront' ? balance : 0,
+      payment_method: kind === 'upfront' ? paymentMethod : null,
+      valid_until: validUntil ? validUntil.toISOString().slice(0, 10) : null,
+      due_date: collectionDate || null,
+      notes: notes || null,
+      created_by: auth.user?.id ?? null,
+    };
+
     try {
-      const { error } = await supabase.from('quotations').insert({
-        doc_number: number,
-        doc_type: kind,
-        customer_name: customerName || null,
-        customer_phone: customerPhone || null,
-        customer_number: customerNumber || null,
-        customer_address: customerAddress || null,
-        lines: docLines as never,
-        subtotal,
-        discount: Number(discount) || 0,
-        total,
-        amount_paid: kind === 'upfront' ? Number(deposit) || 0 : 0,
-        balance_due: kind === 'upfront' ? balance : 0,
-        payment_method: kind === 'upfront' ? paymentMethod : null,
-        valid_until: validUntil ? validUntil.toISOString().slice(0, 10) : null,
-        due_date: collectionDate || null,
-        notes: notes || null,
-        created_by: auth.user?.id ?? null,
-      });
+      const { error } = editingId
+        ? await supabase.from('quotations').update(record).eq('id', editingId)
+        : await supabase.from('quotations').insert(record);
       if (error) throw error;
+      toast({ title: editingId ? 'Document updated' : 'Document saved' });
       loadSaved();
     } catch (e) {
       toast({
@@ -179,28 +184,45 @@ export default function Quotations() {
     }
 
     if (kind === 'upfront') {
+      const saleRecord = {
+        receipt_number: number,
+        doc_type: 'upfront',
+        subtotal,
+        vat_amount: 0,
+        discount: Number(discount) || 0,
+        total,
+        amount_paid: Number(deposit) || 0,
+        balance_due: balance,
+        payment_method: paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+        status: balance > 0 ? 'partial' : 'completed',
+        client_name: customerName || null,
+        client_phone: customerPhone || null,
+        customer_number: customerNumber || null,
+        notes: notes || null,
+        due_date: collectionDate || null,
+        cashier_id: auth.user?.id ?? null,
+        cashier_name: auth.user?.email ?? null,
+      };
       try {
-        const { error } = await supabase.from('sales').insert({
-          receipt_number: number,
-          doc_type: 'upfront',
-          subtotal,
-          vat_amount: 0,
-          discount: Number(discount) || 0,
-          total,
-          amount_paid: Number(deposit) || 0,
-          balance_due: balance,
-          payment_method: paymentMethod.toLowerCase().replace(/\s+/g, '_'),
-          status: balance > 0 ? 'partial' : 'completed',
-          client_name: customerName || null,
-          client_phone: customerPhone || null,
-          customer_number: customerNumber || null,
-          notes: notes || null,
-          due_date: collectionDate || null,
-          cashier_id: auth.user?.id ?? null,
-          cashier_name: auth.user?.email ?? null,
-        });
-        if (error) throw error;
-        toast({ title: 'Upfront payment recorded' });
+        if (editingId) {
+          const { data: existing } = await supabase
+            .from('sales')
+            .select('id')
+            .eq('receipt_number', number)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await supabase.from('sales').update(saleRecord).eq('id', existing.id);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase.from('sales').insert(saleRecord);
+            if (error) throw error;
+          }
+          toast({ title: 'Upfront payment updated' });
+        } else {
+          const { error } = await supabase.from('sales').insert(saleRecord);
+          if (error) throw error;
+          toast({ title: 'Upfront payment recorded' });
+        }
       } catch (e) {
         toast({
           title: 'Saved offline only',
@@ -209,6 +231,7 @@ export default function Quotations() {
         });
       }
     }
+
 
     try {
       await downloadA4Pdf(documentData, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
