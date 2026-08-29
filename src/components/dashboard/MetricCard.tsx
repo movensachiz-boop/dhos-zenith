@@ -48,7 +48,7 @@ export function MetricCard({
           variant === 'success' && "bg-success/10 text-success",
           variant === 'default' && "bg-muted text-muted-foreground"
         )}>
-          <Icon className="h-4.5 w-4.5" strokeWidth={2} />
+          <Icon className="h-5 w-5" strokeWidth={2} />
         </div>
       </div>
     </div>
