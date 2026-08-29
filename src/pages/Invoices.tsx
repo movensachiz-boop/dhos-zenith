@@ -9,6 +9,7 @@ import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { CartItem, PaymentMethod, Product } from '@/types';
 import { useRef } from 'react';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { logAudit } from '@/lib/db';
 
 type Sale = {
   id: string;
