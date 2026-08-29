@@ -488,7 +488,7 @@ export default function Quotations() {
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
           </div>
           <Button variant="pos" onClick={() => generate('upfront')}>
-            <FileDown className="h-4 w-4 mr-2" /> Generate upfront payment PDF
+            <FileDown className="h-4 w-4 mr-2" /> {editingId ? 'Update upfront payment & download PDF' : 'Generate upfront payment PDF'}
           </Button>
         </TabsContent>
       </Tabs>
