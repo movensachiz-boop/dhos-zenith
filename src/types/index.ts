@@ -6,6 +6,7 @@ export interface Product {
   sku: string;
   barcode?: string;
   category: string;
+  productType: ProductType;
   costPrice: number;
   sellingPrice: number;
   vatApplicable: boolean;
@@ -16,6 +17,8 @@ export interface Product {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type ProductType = 'cake' | 'accessory';
 
 export interface CartItem {
   product: Product;
