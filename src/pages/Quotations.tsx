@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FileDown, Loader2, Plus, Trash2 } from 'lucide-react';
+import { FileDown, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,6 +62,10 @@ export default function Quotations() {
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [collectionDate, setCollectionDate] = useState('');
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingNumber, setEditingNumber] = useState<string | null>(null);
+
+
   const loadSaved = useCallback(async () => {
     const { data, error } = await supabase
       .from('quotations')
@@ -106,7 +110,8 @@ export default function Quotations() {
       return;
     }
     const nowDate = new Date();
-    const number = docNo(kind === 'quote' ? 'QT' : 'UP');
+    const number = editingNumber ?? docNo(kind === 'quote' ? 'QT' : 'UP');
+
     const validUntil =
       kind === 'quote' ? new Date(nowDate.getTime() + Number(validDays || 0) * 86400000) : undefined;
     const docLines = validLines.map(({ description, quantity, unitPrice }) => ({
@@ -143,27 +148,32 @@ export default function Quotations() {
     const { data: auth } = await supabase.auth.getUser();
 
     // Save the document so it can always be re-downloaded later.
+    const record = {
+      doc_number: number,
+      doc_type: kind,
+      customer_name: customerName || null,
+      customer_phone: customerPhone || null,
+      customer_number: customerNumber || null,
+      customer_address: customerAddress || null,
+      lines: docLines as never,
+      subtotal,
+      discount: Number(discount) || 0,
+      total,
+      amount_paid: kind === 'upfront' ? Number(deposit) || 0 : 0,
+      balance_due: kind === 'upfront' ? balance : 0,
+      payment_method: kind === 'upfront' ? paymentMethod : null,
+      valid_until: validUntil ? validUntil.toISOString().slice(0, 10) : null,
+      due_date: collectionDate || null,
+      notes: notes || null,
+      created_by: auth.user?.id ?? null,
+    };
+
     try {
-      const { error } = await supabase.from('quotations').insert({
-        doc_number: number,
-        doc_type: kind,
-        customer_name: customerName || null,
-        customer_phone: customerPhone || null,
-        customer_number: customerNumber || null,
-        customer_address: customerAddress || null,
-        lines: docLines as never,
-        subtotal,
-        discount: Number(discount) || 0,
-        total,
-        amount_paid: kind === 'upfront' ? Number(deposit) || 0 : 0,
-        balance_due: kind === 'upfront' ? balance : 0,
-        payment_method: kind === 'upfront' ? paymentMethod : null,
-        valid_until: validUntil ? validUntil.toISOString().slice(0, 10) : null,
-        due_date: collectionDate || null,
-        notes: notes || null,
-        created_by: auth.user?.id ?? null,
-      });
+      const { error } = editingId
+        ? await supabase.from('quotations').update(record).eq('id', editingId)
+        : await supabase.from('quotations').insert(record);
       if (error) throw error;
+      toast({ title: editingId ? 'Document updated' : 'Document saved' });
       loadSaved();
     } catch (e) {
       toast({
@@ -174,28 +184,45 @@ export default function Quotations() {
     }
 
     if (kind === 'upfront') {
+      const saleRecord = {
+        receipt_number: number,
+        doc_type: 'upfront',
+        subtotal,
+        vat_amount: 0,
+        discount: Number(discount) || 0,
+        total,
+        amount_paid: Number(deposit) || 0,
+        balance_due: balance,
+        payment_method: paymentMethod.toLowerCase().replace(/\s+/g, '_'),
+        status: balance > 0 ? 'partial' : 'completed',
+        client_name: customerName || null,
+        client_phone: customerPhone || null,
+        customer_number: customerNumber || null,
+        notes: notes || null,
+        due_date: collectionDate || null,
+        cashier_id: auth.user?.id ?? null,
+        cashier_name: auth.user?.email ?? null,
+      };
       try {
-        const { error } = await supabase.from('sales').insert({
-          receipt_number: number,
-          doc_type: 'upfront',
-          subtotal,
-          vat_amount: 0,
-          discount: Number(discount) || 0,
-          total,
-          amount_paid: Number(deposit) || 0,
-          balance_due: balance,
-          payment_method: paymentMethod.toLowerCase().replace(/\s+/g, '_'),
-          status: balance > 0 ? 'partial' : 'completed',
-          client_name: customerName || null,
-          client_phone: customerPhone || null,
-          customer_number: customerNumber || null,
-          notes: notes || null,
-          due_date: collectionDate || null,
-          cashier_id: auth.user?.id ?? null,
-          cashier_name: auth.user?.email ?? null,
-        });
-        if (error) throw error;
-        toast({ title: 'Upfront payment recorded' });
+        if (editingId) {
+          const { data: existing } = await supabase
+            .from('sales')
+            .select('id')
+            .eq('receipt_number', number)
+            .maybeSingle();
+          if (existing) {
+            const { error } = await supabase.from('sales').update(saleRecord).eq('id', existing.id);
+            if (error) throw error;
+          } else {
+            const { error } = await supabase.from('sales').insert(saleRecord);
+            if (error) throw error;
+          }
+          toast({ title: 'Upfront payment updated' });
+        } else {
+          const { error } = await supabase.from('sales').insert(saleRecord);
+          if (error) throw error;
+          toast({ title: 'Upfront payment recorded' });
+        }
       } catch (e) {
         toast({
           title: 'Saved offline only',
@@ -205,6 +232,7 @@ export default function Quotations() {
       }
     }
 
+
     try {
       await downloadA4Pdf(documentData, `${kind === 'quote' ? 'Quotation' : 'Upfront-Payment'}-${number}`);
       toast({ title: 'PDF downloaded' });
@@ -213,7 +241,57 @@ export default function Quotations() {
     }
   };
 
+  const startEdit = (doc: SavedDoc) => {
+    setEditingId(doc.id);
+    setEditingNumber(doc.doc_number);
+    setCustomerName(doc.customer_name ?? '');
+    setCustomerPhone(doc.customer_phone ?? '');
+    setCustomerNumber(doc.customer_number ?? '');
+    setCustomerAddress(doc.customer_address ?? '');
+    setLines(
+      (doc.lines ?? []).length
+        ? (doc.lines ?? []).map(l => ({
+            id: crypto.randomUUID(),
+            description: l.description,
+            quantity: Number(l.quantity),
+            unitPrice: Number(l.unitPrice),
+          }))
+        : [newLine()]
+    );
+    setDiscount(Number(doc.discount) || 0);
+    setNotes(doc.notes ?? '');
+    setDeposit(Number(doc.amount_paid) || 0);
+    setPaymentMethod(doc.payment_method ?? 'Cash');
+    setCollectionDate(doc.due_date ?? '');
+    if (doc.valid_until) {
+      const days = Math.max(
+        0,
+        Math.round((new Date(doc.valid_until).getTime() - new Date(doc.created_at).getTime()) / 86400000)
+      );
+      setValidDays(days || 14);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast({ title: `Editing ${doc.doc_number}` });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditingNumber(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerNumber('');
+    setCustomerAddress('');
+    setLines([newLine()]);
+    setDiscount(0);
+    setDeposit(0);
+    setPaymentMethod('Cash');
+    setCollectionDate('');
+    setNotes('Quotation valid for 14 days. 50% upfront payment required to confirm an order.');
+    setValidDays(14);
+  };
+
   const redownload = async (doc: SavedDoc) => {
+
     const isUpfront = doc.doc_type === 'upfront';
     const input: A4DocInput = {
       docTitle: isUpfront ? 'UPFRONT PAYMENT' : 'QUOTATION',
@@ -261,6 +339,18 @@ export default function Quotations() {
         <h1 className="text-2xl font-bold">Quotations &amp; Upfront Payments</h1>
         <p className="text-muted-foreground">Generate branded A4 PDFs for clients — every document is saved and can be re-downloaded</p>
       </div>
+
+      {editingId && (
+        <div className="flex items-center justify-between rounded-xl border border-primary/40 bg-primary/5 p-4">
+          <p className="text-sm">
+            Editing <strong className="font-mono">{editingNumber}</strong> — saving will update this document and re-download its PDF.
+          </p>
+          <Button variant="outline" size="sm" onClick={cancelEdit}>
+            <X className="h-4 w-4 mr-1" /> Cancel edit
+          </Button>
+        </div>
+      )}
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border bg-card p-6 space-y-4">
@@ -369,7 +459,7 @@ export default function Quotations() {
             </div>
           </div>
           <Button variant="pos" onClick={() => generate('quote')}>
-            <FileDown className="h-4 w-4 mr-2" /> Generate quotation PDF
+            <FileDown className="h-4 w-4 mr-2" /> {editingId ? 'Update quotation & download PDF' : 'Generate quotation PDF'}
           </Button>
         </TabsContent>
 
@@ -398,7 +488,7 @@ export default function Quotations() {
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
           </div>
           <Button variant="pos" onClick={() => generate('upfront')}>
-            <FileDown className="h-4 w-4 mr-2" /> Generate upfront payment PDF
+            <FileDown className="h-4 w-4 mr-2" /> {editingId ? 'Update upfront payment & download PDF' : 'Generate upfront payment PDF'}
           </Button>
         </TabsContent>
       </Tabs>
@@ -432,6 +522,9 @@ export default function Quotations() {
                       <td className={cd?.overdue ? 'text-destructive font-semibold' : ''}>{cd ? cd.label : '-'}</td>
                       <td className="text-right">
                         <div className="flex justify-end gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(d)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Button size="sm" variant="outline" onClick={() => redownload(d)}>
                             <FileDown className="h-4 w-4" />
                           </Button>
