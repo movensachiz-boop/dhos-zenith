@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Printer } from 'lucide-react';
+import { Loader2, Printer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -9,6 +9,7 @@ import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { CartItem, PaymentMethod, Product } from '@/types';
 import { useRef } from 'react';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { logAudit } from '@/lib/db';
 
 type Sale = {
   id: string;
@@ -79,6 +80,24 @@ export default function Invoices() {
     load();
   };
 
+  const deleteSale = async (sale: Sale) => {
+    if (!window.confirm(`Delete ${sale.receipt_number} permanently? This removes it from reports and the dashboard.`)) return;
+    await supabase.from('stock_movements').delete().eq('reference', sale.id);
+    const itemsRes = await supabase.from('sale_items').delete().eq('sale_id', sale.id);
+    if (itemsRes.error) {
+      toast({ title: 'Could not delete items', description: itemsRes.error.message, variant: 'destructive' });
+      return;
+    }
+    const { error } = await supabase.from('sales').delete().eq('id', sale.id);
+    if (error) {
+      toast({ title: 'Could not delete', description: error.message, variant: 'destructive' });
+      return;
+    }
+    await logAudit('delete', 'sales', sale.id, { receipt_number: sale.receipt_number, total: sale.total });
+    toast({ title: `${sale.receipt_number} deleted` });
+    setSales(prev => prev.filter(x => x.id !== sale.id));
+  };
+
   const print = () => {
     const content = receiptRef.current?.innerHTML;
     if (!content) return;
@@ -131,6 +150,9 @@ export default function Invoices() {
                     {s.status !== 'voided' && (
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => voidSale(s)}>Void</Button>
                     )}
+                    <Button size="sm" variant="ghost" className="text-destructive" onClick={() => deleteSale(s)} aria-label={`Delete ${s.receipt_number}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </td>
                 </tr>
               ))}
