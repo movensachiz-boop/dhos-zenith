@@ -1,3 +1,5 @@
+import { jsPDF } from 'jspdf';
+
 export type A4Line = { description: string; quantity: number; unitPrice: number };
 
 export type A4DocInput = {
@@ -132,7 +134,6 @@ export function buildA4Html(d: A4DocInput) {
 }
 
 export async function downloadA4Pdf(d: A4DocInput, fileName: string) {
-  const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   const pink = [233, 30, 140] as const;
   const left = 14;
@@ -140,7 +141,8 @@ export async function downloadA4Pdf(d: A4DocInput, fileName: string) {
   let y = 16;
 
   try {
-    const response = await fetch(d.logoSrc);
+    const cached = localStorage.getItem('mc_logo_data_url');
+    const response = await fetch(cached || d.logoSrc);
     const blob = await response.blob();
     const logo = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();

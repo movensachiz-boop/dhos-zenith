@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, KeyboardEvent } from 'react';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, Receipt, Loader2, WifiOff } from 'lucide-react';
+import { Download, Search, Plus, Minus, Trash2, CreditCard, Banknote, Smartphone, Receipt, Loader2, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product, CartItem, PaymentMethod } from '@/types';
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, logAudit } from '@/lib/db';
 import { cacheProducts, readCachedProducts, queueSale, readQueue, writeQueue } from '@/lib/offline';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { downloadReceiptPdf } from '@/lib/receiptPdf';
 
 const REFERRAL_RATE = 0.05; // referrer earns 5% of the sale as credit
 
@@ -740,6 +741,9 @@ export default function POS() {
           )}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setReceipt(null)}>Close</Button>
+            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Receipt-${receipt?.receiptNumber ?? ''}`)}>
+              <Download className="h-4 w-4 mr-2" />Download PDF
+            </Button>
             <Button onClick={handlePrintReceipt}>Print Receipt</Button>
           </DialogFooter>
         </DialogContent>
