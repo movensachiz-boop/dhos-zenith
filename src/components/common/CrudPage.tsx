@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logAudit } from '@/lib/db';
+import { useCachedState, isOffline } from '@/lib/cache';
 
 export type FieldDef = {
   key: string;
@@ -30,17 +31,19 @@ interface CrudPageProps {
 type Row = Record<string, unknown> & { id: string };
 
 export default function CrudPage({ table, title, subtitle, fields, searchKeys }: CrudPageProps) {
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows, hadCache] = useCachedState<Row[]>(`mc_${table}_cache`, []);
+  const [loading, setLoading] = useState(!hadCache);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
+    if (isOffline()) { setLoading(false); return; }
     const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
-    if (error) toast({ title: 'Failed to load', description: error.message, variant: 'destructive' });
-    else setRows((data ?? []) as Row[]);
+    if (error) {
+      if (!hadCache) toast({ title: 'Failed to load', description: error.message, variant: 'destructive' });
+    } else setRows((data ?? []) as Row[]);
     setLoading(false);
   };
 

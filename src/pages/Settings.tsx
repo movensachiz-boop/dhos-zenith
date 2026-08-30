@@ -6,6 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logAudit } from '@/lib/db';
 import { useAuth } from '@/hooks/useAuth';
+import { useCachedState, isOffline } from '@/lib/cache';
 
 type Settings = {
   id: string;
@@ -19,20 +20,22 @@ type Settings = {
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings, hadCache] = useCachedState<Settings | null>('mc_settings_cache', null);
+  const [loading, setLoading] = useState(!hadCache);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     (async () => {
+      if (isOffline()) { setLoading(false); return; }
       const { data, error } = await supabase.from('settings').select('*').limit(1).maybeSingle();
-      if (error) toast({ title: 'Failed to load settings', description: error.message, variant: 'destructive' });
-      else setSettings(data as unknown as Settings);
+      if (error) {
+        if (!hadCache) toast({ title: 'Failed to load settings', description: error.message, variant: 'destructive' });
+      } else if (data) setSettings(data as unknown as Settings);
       setLoading(false);
     })();
   }, []);
 
-  const update = (patch: Partial<Settings>) => setSettings(prev => (prev ? { ...prev, ...patch } : prev));
+  const update = (patch: Partial<Settings>) => setSettings(settings ? { ...settings, ...patch } : settings);
 
   const save = async () => {
     if (!settings) return;

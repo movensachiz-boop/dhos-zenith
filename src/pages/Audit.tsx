@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCachedState, isOffline } from '@/lib/cache';
 
 type Log = {
   id: string;
@@ -15,19 +16,21 @@ type Log = {
 };
 
 export default function Audit() {
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [logs, setLogs, hadCache] = useCachedState<Log[]>('mc_audit_cache', []);
+  const [loading, setLoading] = useState(!hadCache);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
     (async () => {
+      if (isOffline()) { setLoading(false); return; }
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(500);
-      if (error) toast({ title: 'Failed to load audit trail', description: error.message, variant: 'destructive' });
-      else setLogs((data ?? []) as unknown as Log[]);
+      if (error) {
+        if (!hadCache) toast({ title: 'Failed to load audit trail', description: error.message, variant: 'destructive' });
+      } else setLogs((data ?? []) as unknown as Log[]);
       setLoading(false);
     })();
   }, []);
