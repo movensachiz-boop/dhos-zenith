@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Printer, Trash2 } from 'lucide-react';
+import { Download, Loader2, Printer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -9,6 +9,7 @@ import { ThermalReceipt } from '@/components/pos/ThermalReceipt';
 import { CartItem, PaymentMethod, Product } from '@/types';
 import { useRef } from 'react';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { downloadReceiptPdf } from '@/lib/receiptPdf';
 import { logAudit } from '@/lib/db';
 import { useCachedState, isOffline } from '@/lib/cache';
 
@@ -189,6 +190,9 @@ export default function Invoices() {
           )}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setPreview(null)}>Close</Button>
+            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Receipt-${preview?.sale.receipt_number ?? ''}`)}>
+              <Download className="h-4 w-4 mr-2" />Download PDF
+            </Button>
             <Button onClick={print}><Printer className="h-4 w-4 mr-2" />Print</Button>
           </DialogFooter>
         </DialogContent>

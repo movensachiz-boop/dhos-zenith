@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Banknote, HandCoins, Loader2, Plus, Printer, Trash2 } from 'lucide-react';
+import { Banknote, Download, HandCoins, Loader2, Plus, Printer, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCachedState, isOffline } from '@/lib/cache';
-import { Loader2, Plus, Printer, Trash2, Users, Wallet } from 'lucide-react';
+import { Download, Loader2, Plus, Printer, Trash2, Users, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
