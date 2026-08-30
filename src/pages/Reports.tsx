@@ -48,7 +48,7 @@ export default function Reports() {
 
   const load = useCallback(async () => {
     if (isOffline()) { setLoading(false); return; }
-    const [salesRes, itemsRes, expensesRes, productList] = await Promise.all([
+    const [salesRes, itemsRes, expensesRes, injRes, repRes, productList] = await Promise.all([
       supabase.from('sales').select('*').order('created_at', { ascending: false }),
       supabase.from('sale_items').select('*'),
       supabase.from('expenses').select('amount, paid_on'),
@@ -62,6 +62,8 @@ export default function Reports() {
       setSales((salesRes.data ?? []) as unknown as Sale[]);
       setItems((itemsRes.data ?? []) as unknown as SaleItem[]);
       setExpenses((expensesRes.data ?? []) as { amount: number; paid_on: string }[]);
+      setInjections((injRes.data ?? []) as { amount: number }[]);
+      setInjRepayments((repRes.data ?? []) as { amount: number }[]);
       if (productList.length) setProducts(productList);
     }
     setLoading(false);
