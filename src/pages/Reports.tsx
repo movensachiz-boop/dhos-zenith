@@ -41,6 +41,8 @@ export default function Reports() {
   const [items, setItems] = useCachedState<SaleItem[]>('mc_sale_items_cache', []);
   const [products, setProducts] = useCachedState<Product[]>('mc_products_cache', []);
   const [expenses, setExpenses] = useCachedState<{ amount: number; paid_on: string }[]>('mc_expenses_report_cache', []);
+  const [injections, setInjections] = useCachedState<{ amount: number }[]>('mc_injections_report_cache', []);
+  const [injRepayments, setInjRepayments] = useCachedState<{ amount: number }[]>('mc_injection_repayments_report_cache', []);
   const [loading, setLoading] = useState(!hadCache);
   const [range, setRange] = useState('30');
 
@@ -50,6 +52,8 @@ export default function Reports() {
       supabase.from('sales').select('*').order('created_at', { ascending: false }),
       supabase.from('sale_items').select('*'),
       supabase.from('expenses').select('amount, paid_on'),
+      supabase.from('injections').select('amount'),
+      supabase.from('injection_repayments').select('amount'),
       fetchProducts().catch(() => [] as Product[]),
     ]);
     if (salesRes.error) {
