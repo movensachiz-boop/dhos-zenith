@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logAudit } from '@/lib/db';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { downloadReceiptPdf } from '@/lib/receiptPdf';
 import { RoundReceipt, RoundReceiptData } from '@/components/round/RoundReceipt';
 import { countdownTo, cycleDate, nextCycleDate, useNow } from '@/lib/countdown';
 
@@ -583,6 +584,9 @@ export default function MoneyRound() {
           <DialogHeader><DialogTitle>Round receipt</DialogTitle></DialogHeader>
           {receipt ? <RoundReceipt ref={receiptRef} data={receipt} /> : null}
           <DialogFooter>
+            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Round-Receipt-${receipt?.receiptNumber ?? ''}`)}>
+              <Download className="mr-2 h-4 w-4" /> Download PDF
+            </Button>
             <Button variant="pos" onClick={() => receiptRef.current && printReceiptHtml(receiptRef.current.innerHTML)}>
               <Printer className="mr-2 h-4 w-4" /> Print receipt
             </Button>

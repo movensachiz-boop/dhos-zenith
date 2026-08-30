@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCachedState, isOffline } from '@/lib/cache';
 import { logAudit } from '@/lib/db';
 import { printReceiptHtml } from '@/lib/receiptPrint';
+import { downloadReceiptPdf } from '@/lib/receiptPdf';
 import { InjectionReceipt, InjectionReceiptData } from '@/components/injections/InjectionReceipt';
 
 type Injection = {
@@ -401,6 +402,9 @@ export default function Injections() {
           <DialogHeader><DialogTitle>{receipt?.kind === 'repayment' ? 'Repayment receipt' : 'Injection receipt'}</DialogTitle></DialogHeader>
           {receipt && <InjectionReceipt ref={receiptRef} data={receipt} />}
           <DialogFooter>
+            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Injection-Receipt-${receipt?.receiptNumber ?? ''}`)}>
+              <Download className="mr-2 h-4 w-4" /> Download PDF
+            </Button>
             <Button variant="pos" onClick={() => receiptRef.current && printReceiptHtml(receiptRef.current.innerHTML)}>
               <Printer className="mr-2 h-4 w-4" /> Print receipt
             </Button>
