@@ -98,7 +98,7 @@ export default function Invoices() {
     }
     await logAudit('delete', 'sales', sale.id, { receipt_number: sale.receipt_number, total: sale.total });
     toast({ title: `${sale.receipt_number} deleted` });
-    setSales(prev => prev.filter(x => x.id !== sale.id));
+    setSales(sales.filter(x => x.id !== sale.id));
   };
 
   const print = () => {
