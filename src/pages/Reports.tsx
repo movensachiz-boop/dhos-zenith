@@ -41,15 +41,19 @@ export default function Reports() {
   const [items, setItems] = useCachedState<SaleItem[]>('mc_sale_items_cache', []);
   const [products, setProducts] = useCachedState<Product[]>('mc_products_cache', []);
   const [expenses, setExpenses] = useCachedState<{ amount: number; paid_on: string }[]>('mc_expenses_report_cache', []);
+  const [injections, setInjections] = useCachedState<{ amount: number }[]>('mc_injections_report_cache', []);
+  const [injRepayments, setInjRepayments] = useCachedState<{ amount: number }[]>('mc_injection_repayments_report_cache', []);
   const [loading, setLoading] = useState(!hadCache);
   const [range, setRange] = useState('30');
 
   const load = useCallback(async () => {
     if (isOffline()) { setLoading(false); return; }
-    const [salesRes, itemsRes, expensesRes, productList] = await Promise.all([
+    const [salesRes, itemsRes, expensesRes, injRes, repRes, productList] = await Promise.all([
       supabase.from('sales').select('*').order('created_at', { ascending: false }),
       supabase.from('sale_items').select('*'),
       supabase.from('expenses').select('amount, paid_on'),
+      supabase.from('injections').select('amount'),
+      supabase.from('injection_repayments').select('amount'),
       fetchProducts().catch(() => [] as Product[]),
     ]);
     if (salesRes.error) {
@@ -58,6 +62,8 @@ export default function Reports() {
       setSales((salesRes.data ?? []) as unknown as Sale[]);
       setItems((itemsRes.data ?? []) as unknown as SaleItem[]);
       setExpenses((expensesRes.data ?? []) as { amount: number; paid_on: string }[]);
+      setInjections((injRes.data ?? []) as { amount: number }[]);
+      setInjRepayments((repRes.data ?? []) as { amount: number }[]);
       if (productList.length) setProducts(productList);
     }
     setLoading(false);
@@ -127,6 +133,12 @@ export default function Reports() {
     return expenses.filter(e => new Date(e.paid_on) >= start).reduce((s, e) => s + Number(e.amount), 0);
   }, [expenses, range]);
 
+  const debt = useMemo(() => {
+    const injected = injections.reduce((s, i) => s + Number(i.amount), 0);
+    const repaid = injRepayments.reduce((s, r) => s + Number(r.amount), 0);
+    return { injected, repaid, outstanding: Math.max(0, injected - repaid) };
+  }, [injections, injRepayments]);
+
   const exportCsv = () => {
     const header = 'Receipt,Type,Date,Payment,Cashier,VAT,Total\n';
     const body = filtered
@@ -183,6 +195,23 @@ export default function Reports() {
             <Stat label="Transactions" value={String(totals.count)} />
             <Stat label="Average sale" value={`$${totals.avg.toFixed(2)}`} />
             <Stat label="Bills paid" value={`$${periodExpenses.toFixed(2)}`} />
+          </div>
+
+          <div className="rounded-xl border bg-card p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Money injections (debt, not profit)</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: 'Injected into business', value: debt.injected },
+                { label: 'Repaid', value: debt.repaid },
+                { label: 'Still owing', value: debt.outstanding },
+              ].map(card => (
+                <div key={card.label} className="rounded-lg border p-3">
+                  <p className="truncate text-xs text-muted-foreground">{card.label}</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums">${card.value.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Injected money is excluded from revenue and profit; it is a debt the business must return.</p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-3">

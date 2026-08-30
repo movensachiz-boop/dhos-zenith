@@ -14,7 +14,8 @@ import {
   HelpCircle,
   PiggyBank,
   ReceiptText,
-  UserCog
+  UserCog,
+  Banknote,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Invoices', href: '/invoices', icon: FileText },
   { name: 'Quotations', href: '/quotations', icon: FileText },
   { name: 'Money Round', href: '/money-round', icon: PiggyBank },
+  { name: 'Money Injection', href: '/injections', icon: Banknote },
   { name: 'Bills & Expenses', href: '/bills', icon: ReceiptText },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
   { name: 'Users', href: '/users', icon: UserCog },

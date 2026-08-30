@@ -158,6 +158,92 @@ export type Database = {
         }
         Relationships: []
       }
+      injection_repayments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          injection_id: string
+          notes: string | null
+          paid_on: string
+          payment_method: string
+          receipt_number: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          injection_id: string
+          notes?: string | null
+          paid_on?: string
+          payment_method?: string
+          receipt_number: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          injection_id?: string
+          notes?: string | null
+          paid_on?: string
+          payment_method?: string
+          receipt_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injection_repayments_injection_id_fkey"
+            columns: ["injection_id"]
+            isOneToOne: false
+            referencedRelation: "injections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injections: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          received_on: string
+          reference: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          received_on?: string
+          reference: string
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          received_on?: string
+          reference?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       money_rounds: {
         Row: {
           created_at: string
