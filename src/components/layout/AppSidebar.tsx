@@ -13,7 +13,8 @@ import {
   ChevronRight,
   HelpCircle,
   PiggyBank,
-  ReceiptText
+  ReceiptText,
+  UserCog
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -35,6 +36,7 @@ const navigation = [
   { name: 'Money Round', href: '/money-round', icon: PiggyBank },
   { name: 'Bills & Expenses', href: '/bills', icon: ReceiptText },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
+  { name: 'Users', href: '/users', icon: UserCog },
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help', href: '/help', icon: HelpCircle },
 ];
