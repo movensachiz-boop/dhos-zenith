@@ -133,6 +133,12 @@ export default function Reports() {
     return expenses.filter(e => new Date(e.paid_on) >= start).reduce((s, e) => s + Number(e.amount), 0);
   }, [expenses, range]);
 
+  const debt = useMemo(() => {
+    const injected = injections.reduce((s, i) => s + Number(i.amount), 0);
+    const repaid = injRepayments.reduce((s, r) => s + Number(r.amount), 0);
+    return { injected, repaid, outstanding: Math.max(0, injected - repaid) };
+  }, [injections, injRepayments]);
+
   const exportCsv = () => {
     const header = 'Receipt,Type,Date,Payment,Cashier,VAT,Total\n';
     const body = filtered
@@ -189,6 +195,23 @@ export default function Reports() {
             <Stat label="Transactions" value={String(totals.count)} />
             <Stat label="Average sale" value={`$${totals.avg.toFixed(2)}`} />
             <Stat label="Bills paid" value={`$${periodExpenses.toFixed(2)}`} />
+          </div>
+
+          <div className="rounded-xl border bg-card p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Money injections (debt, not profit)</h2>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {[
+                { label: 'Injected into business', value: debt.injected },
+                { label: 'Repaid', value: debt.repaid },
+                { label: 'Still owing', value: debt.outstanding },
+              ].map(card => (
+                <div key={card.label} className="rounded-lg border p-3">
+                  <p className="truncate text-xs text-muted-foreground">{card.label}</p>
+                  <p className="mt-1 text-xl font-bold tabular-nums">${card.value.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">Injected money is excluded from revenue and profit; it is a debt the business must return.</p>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-3">
