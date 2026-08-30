@@ -221,7 +221,7 @@ export default function Bills() {
           <DialogHeader><DialogTitle>Bill receipt</DialogTitle></DialogHeader>
           {receipt && <BillReceipt ref={receiptRef} data={receipt} />}
           <DialogFooter>
-            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Bill-Receipt-${receipt?.receipt_number ?? ''}`)}>
+            <Button variant="outline" onClick={() => receiptRef.current && downloadReceiptPdf(receiptRef.current, `Bill-Receipt-${receipt?.receiptNumber ?? ''}`)}>
               <Download className="mr-2 h-4 w-4" /> Download PDF
             </Button>
             <Button variant="pos" onClick={() => receiptRef.current && printReceiptHtml(receiptRef.current.innerHTML)}>
