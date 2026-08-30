@@ -10,6 +10,7 @@ import { CartItem, PaymentMethod, Product } from '@/types';
 import { useRef } from 'react';
 import { printReceiptHtml } from '@/lib/receiptPrint';
 import { logAudit } from '@/lib/db';
+import { useCachedState, isOffline } from '@/lib/cache';
 
 type Sale = {
   id: string;
@@ -26,16 +27,18 @@ type Sale = {
 };
 
 export default function Invoices() {
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sales, setSales, hadCache] = useCachedState<Sale[]>('mc_sales_cache', []);
+  const [loading, setLoading] = useState(!hadCache);
   const [query, setQuery] = useState('');
   const [preview, setPreview] = useState<null | { sale: Sale; items: CartItem[] }>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
+    if (isOffline()) { setLoading(false); return; }
     const { data, error } = await supabase.from('sales').select('*').order('created_at', { ascending: false });
-    if (error) toast({ title: 'Failed to load invoices', description: error.message, variant: 'destructive' });
-    else setSales((data ?? []) as unknown as Sale[]);
+    if (error) {
+      if (!hadCache) toast({ title: 'Failed to load invoices', description: error.message, variant: 'destructive' });
+    } else setSales((data ?? []) as unknown as Sale[]);
     setLoading(false);
   };
 
@@ -95,7 +98,7 @@ export default function Invoices() {
     }
     await logAudit('delete', 'sales', sale.id, { receipt_number: sale.receipt_number, total: sale.total });
     toast({ title: `${sale.receipt_number} deleted` });
-    setSales(prev => prev.filter(x => x.id !== sale.id));
+    setSales(sales.filter(x => x.id !== sale.id));
   };
 
   const print = () => {

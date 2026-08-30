@@ -14,19 +14,26 @@ import { toast } from '@/hooks/use-toast';
 import AddProductDialog from '@/components/products/AddProductDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, logAudit } from '@/lib/db';
+import { useCachedState, isOffline } from '@/lib/cache';
 
 export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts, hadCache] = useCachedState<Product[]>('mc_products_cache', []);
+  const [loading, setLoading] = useState(!hadCache);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const load = async () => {
+    if (isOffline()) {
+      setLoading(false);
+      return;
+    }
     try {
       setProducts(await fetchProducts());
     } catch (e) {
-      toast({ title: 'Failed to load products', description: (e as Error).message, variant: 'destructive' });
+      if (!hadCache) {
+        toast({ title: 'Failed to load products', description: (e as Error).message, variant: 'destructive' });
+      }
     } finally {
       setLoading(false);
     }
@@ -34,6 +41,7 @@ export default function Products() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const categories: Category[] = useMemo(() => {

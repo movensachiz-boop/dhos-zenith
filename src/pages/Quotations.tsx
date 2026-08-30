@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
+import { useCachedState, isOffline } from '@/lib/cache';
 import { useCachedLogo } from '@/lib/offline';
 import { fetchProducts } from '@/lib/db';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,9 +46,9 @@ const money = (n: number) => `$${Number(n || 0).toFixed(2)}`;
 export default function Quotations() {
   const logoSrc = useCachedLogo(logoAsset.url);
   const now = useNow();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [saved, setSaved] = useState<SavedDoc[]>([]);
-  const [loadingSaved, setLoadingSaved] = useState(true);
+  const [products, setProducts] = useCachedState<Product[]>('mc_products_cache', []);
+  const [saved, setSaved, hadSavedCache] = useCachedState<SavedDoc[]>('mc_quotations_cache', []);
+  const [loadingSaved, setLoadingSaved] = useState(!hadSavedCache);
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -72,14 +73,20 @@ export default function Quotations() {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
-    if (error) toast({ title: 'Could not load saved documents', description: error.message, variant: 'destructive' });
-    setSaved((data ?? []) as unknown as SavedDoc[]);
+    if (error) {
+      if (!hadSavedCache) toast({ title: 'Could not load saved documents', description: error.message, variant: 'destructive' });
+    } else setSaved((data ?? []) as unknown as SavedDoc[]);
     setLoadingSaved(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    fetchProducts().then(setProducts).catch(() => setProducts([]));
-    loadSaved();
+    if (!isOffline()) {
+      fetchProducts().then(setProducts).catch(() => undefined);
+      loadSaved();
+    } else {
+      setLoadingSaved(false);
+    }
   }, [loadSaved]);
 
   const subtotal = useMemo(

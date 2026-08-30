@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCachedState, isOffline } from '@/lib/cache';
 import { logAudit } from '@/lib/db';
 import { printReceiptHtml } from '@/lib/receiptPrint';
 import { BillReceipt, BillReceiptData } from '@/components/bills/BillReceipt';
@@ -39,8 +40,8 @@ const emptyForm = {
 };
 
 export default function Bills() {
-  const [rows, setRows] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows, hadCache] = useCachedState<Expense[]>('mc_expenses_cache', []);
+  const [loading, setLoading] = useState(!hadCache);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -48,9 +49,11 @@ export default function Bills() {
   const receiptRef = useRef<HTMLDivElement>(null);
 
   const load = async () => {
+    if (isOffline()) { setLoading(false); return; }
     const { data, error } = await supabase.from('expenses').select('*').order('paid_on', { ascending: false });
-    if (error) toast({ title: 'Failed to load bills', description: error.message, variant: 'destructive' });
-    setRows((data ?? []) as unknown as Expense[]);
+    if (error) {
+      if (!hadCache) toast({ title: 'Failed to load bills', description: error.message, variant: 'destructive' });
+    } else setRows((data ?? []) as unknown as Expense[]);
     setLoading(false);
   };
 

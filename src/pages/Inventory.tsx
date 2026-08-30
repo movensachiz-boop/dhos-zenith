@@ -6,21 +6,23 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogD
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts, logAudit } from '@/lib/db';
+import { useCachedState, isOffline } from '@/lib/cache';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 
 export default function Inventory() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts, hadCache] = useCachedState<Product[]>('mc_products_cache', []);
+  const [loading, setLoading] = useState(!hadCache);
   const [target, setTarget] = useState<Product | null>(null);
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
+    if (isOffline()) { setLoading(false); return; }
     try {
       setProducts(await fetchProducts());
     } catch (e) {
-      toast({ title: 'Failed to load inventory', description: (e as Error).message, variant: 'destructive' });
+      if (!hadCache) toast({ title: 'Failed to load inventory', description: (e as Error).message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }

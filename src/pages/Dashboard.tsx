@@ -16,6 +16,7 @@ import { LowStockAlert } from '@/components/dashboard/LowStockAlert';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchProducts } from '@/lib/db';
 import { countdownTo, useNow } from '@/lib/countdown';
+import { useCachedState, isOffline } from '@/lib/cache';
 import { DashboardMetrics, PaymentMethod, Product, Transaction, TransactionStatus } from '@/types';
 
 const emptyMetrics: DashboardMetrics = {
@@ -46,13 +47,14 @@ const receivedAmount = (s: { doc_type?: string | null; total: number | string; a
 
 export default function Dashboard() {
   const now = useNow();
-  const [metrics, setMetrics] = useState<DashboardMetrics>(emptyMetrics);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [recent, setRecent] = useState<Transaction[]>([]);
-  const [upfronts, setUpfronts] = useState<UpfrontOrder[]>([]);
+  const [metrics, setMetrics] = useCachedState<DashboardMetrics>('mc_dashboard_metrics', emptyMetrics);
+  const [products, setProducts] = useCachedState<Product[]>('mc_products_cache', []);
+  const [recent, setRecent] = useCachedState<Transaction[]>('mc_dashboard_recent', []);
+  const [upfronts, setUpfronts] = useCachedState<UpfrontOrder[]>('mc_dashboard_upfronts', []);
 
   useEffect(() => {
     (async () => {
+      if (isOffline()) return;
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
@@ -68,7 +70,7 @@ export default function Dashboard() {
       const todaySales = todays.reduce((sum, s) => sum + receivedAmount(s), 0);
       const upfrontSales = sales.filter(s => s.doc_type === 'upfront');
 
-      setProducts(productsRes);
+      if (productsRes.length) setProducts(productsRes);
       setMetrics({
         todaySales,
         todayTransactions: todays.length,
