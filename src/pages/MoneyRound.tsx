@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCachedState, isOffline } from '@/lib/cache';
 import { Loader2, Plus, Printer, Trash2, Users, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,12 +58,12 @@ const receiptNo = (prefix: string) => `${prefix}-${Date.now().toString().slice(-
 const dayLabel = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function MoneyRound() {
-  const [rounds, setRounds] = useState<Round[]>([]);
+  const [rounds, setRounds, hadRoundsCache] = useCachedState<Round[]>('mc_rounds_cache', []);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expenses, setExpenses] = useState<{ amount: number; paid_on: string }[]>([]);
+  const [members, setMembers] = useCachedState<Member[]>('mc_round_members_cache', []);
+  const [entries, setEntries] = useCachedState<Entry[]>('mc_round_entries_cache', []);
+  const [loading, setLoading] = useState(!hadRoundsCache);
+  const [expenses, setExpenses] = useCachedState<{ amount: number; paid_on: string }[]>('mc_expenses_round_cache', []);
   const now = useNow(30000);
 
   const [roundOpen, setRoundOpen] = useState(false);
@@ -82,8 +83,17 @@ export default function MoneyRound() {
   const round = rounds.find(r => r.id === activeId) ?? null;
 
   const loadRounds = async () => {
+    if (isOffline()) {
+      setActiveId(prev => (prev && rounds.some(r => r.id === prev) ? prev : rounds[0]?.id ?? null));
+      setLoading(false);
+      return;
+    }
     const { data, error } = await supabase.from('money_rounds').select('*').order('created_at', { ascending: false });
-    if (error) toast({ title: 'Failed to load rounds', description: error.message, variant: 'destructive' });
+    if (error) {
+      if (!hadRoundsCache) toast({ title: 'Failed to load rounds', description: error.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
     const list = ((data ?? []) as unknown as Round[]);
     setRounds(list);
     setActiveId(prev => prev && list.some(r => r.id === prev) ? prev : (list[0]?.id ?? null));
@@ -91,6 +101,7 @@ export default function MoneyRound() {
   };
 
   const loadDetail = async (id: string) => {
+    if (isOffline()) return;
     const [m, e] = await Promise.all([
       supabase.from('round_members').select('*').eq('round_id', id).order('position'),
       supabase.from('round_entries').select('*').eq('round_id', id).order('created_at', { ascending: false }),
@@ -101,10 +112,12 @@ export default function MoneyRound() {
 
   useEffect(() => {
     loadRounds();
-    supabase
-      .from('expenses')
-      .select('amount, paid_on')
-      .then(({ data }) => setExpenses(((data ?? []) as { amount: number; paid_on: string }[])));
+    if (!isOffline()) {
+      supabase
+        .from('expenses')
+        .select('amount, paid_on')
+        .then(({ data }) => { if (data) setExpenses(data as { amount: number; paid_on: string }[]); });
+    }
   }, []);
   useEffect(() => { if (activeId) loadDetail(activeId); else { setMembers([]); setEntries([]); } }, [activeId]);
 
