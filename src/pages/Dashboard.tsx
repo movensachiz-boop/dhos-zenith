@@ -158,7 +158,11 @@ export default function Dashboard() {
           value={`$${metrics.outstandingReceivables.toFixed(2)}`}
           icon={CreditCard}
         />
+        <MetricCard title="Round Payouts Received" value={`$${metrics.roundCashIn.toFixed(2)}`} icon={Users} variant="primary" />
+        <MetricCard title="Round Contributions Paid" value={`$${metrics.roundCashOut.toFixed(2)}`} icon={PiggyBank} />
+        <MetricCard title="Round Net Position" value={`$${(metrics.roundCashIn - metrics.roundCashOut).toFixed(2)}`} icon={TrendingUp} variant={metrics.roundCashIn - metrics.roundCashOut < 0 ? 'warning' : undefined} />
       </div>
+
 
       <div className="rounded-lg border bg-card">
         <div className="border-b px-4 py-3">
