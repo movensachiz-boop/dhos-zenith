@@ -8,6 +8,9 @@ import {
   CreditCard,
   Clock,
   Wallet,
+  Users,
+  PiggyBank,
+
 } from 'lucide-react';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
@@ -28,7 +31,10 @@ const emptyMetrics: DashboardMetrics = {
   outstandingReceivables: 0,
   upfrontReceived: 0,
   orderBalances: 0,
+  roundCashIn: 0,
+  roundCashOut: 0,
 };
+
 
 type UpfrontOrder = {
   id: string;
@@ -58,17 +64,21 @@ export default function Dashboard() {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
-      const [productsRes, salesRes, clientsRes, transportersRes] = await Promise.all([
+      const [productsRes, salesRes, clientsRes, transportersRes, roundRes] = await Promise.all([
         fetchProducts().catch(() => [] as Product[]),
         supabase.from('sales').select('*').order('created_at', { ascending: false }).limit(200),
         supabase.from('clients').select('outstanding_balance'),
         supabase.from('transporters').select('status'),
+        supabase.from('round_entries').select('direction, amount'),
       ]);
 
       const sales = (salesRes.data ?? []).filter(s => s.status !== 'voided');
       const todays = sales.filter(s => new Date(s.created_at) >= startOfDay);
       const todaySales = todays.reduce((sum, s) => sum + receivedAmount(s), 0);
       const upfrontSales = sales.filter(s => s.doc_type === 'upfront');
+      const roundEntries = roundRes.data ?? [];
+      const roundCashIn = roundEntries.filter(e => e.direction === 'in').reduce((s, e) => s + Number(e.amount), 0);
+      const roundCashOut = roundEntries.filter(e => e.direction === 'out').reduce((s, e) => s + Number(e.amount), 0);
 
       if (productsRes.length) setProducts(productsRes);
       setMetrics({
@@ -80,7 +90,10 @@ export default function Dashboard() {
         outstandingReceivables: (clientsRes.data ?? []).reduce((s, c) => s + Number(c.outstanding_balance ?? 0), 0),
         upfrontReceived: upfrontSales.reduce((s, x) => s + Number(x.amount_paid ?? 0), 0),
         orderBalances: sales.reduce((s, x) => s + Number(x.balance_due ?? 0), 0),
+        roundCashIn,
+        roundCashOut,
       });
+
 
       setUpfronts(
         upfrontSales
@@ -148,7 +161,11 @@ export default function Dashboard() {
           value={`$${metrics.outstandingReceivables.toFixed(2)}`}
           icon={CreditCard}
         />
+        <MetricCard title="Round Payouts Received" value={`$${metrics.roundCashIn.toFixed(2)}`} icon={Users} variant="primary" />
+        <MetricCard title="Round Contributions Paid" value={`$${metrics.roundCashOut.toFixed(2)}`} icon={PiggyBank} />
+        <MetricCard title="Round Net Position" value={`$${(metrics.roundCashIn - metrics.roundCashOut).toFixed(2)}`} icon={TrendingUp} variant={metrics.roundCashIn - metrics.roundCashOut < 0 ? 'warning' : undefined} />
       </div>
+
 
       <div className="rounded-lg border bg-card">
         <div className="border-b px-4 py-3">
