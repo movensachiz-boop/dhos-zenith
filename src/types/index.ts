@@ -113,7 +113,10 @@ export interface DashboardMetrics {
   outstandingReceivables: number;
   upfrontReceived: number;
   orderBalances: number;
+  roundCashIn: number;
+  roundCashOut: number;
 }
+
 
 export interface Category {
   id: string;
