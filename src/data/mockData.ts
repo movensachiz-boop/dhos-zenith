@@ -17,6 +17,9 @@ export const mockDashboardMetrics: DashboardMetrics = {
   outstandingReceivables: 0,
   upfrontReceived: 0,
   orderBalances: 0,
+  roundCashIn: 0,
+  roundCashOut: 0,
 };
+
 
 export const mockRecentTransactions: Transaction[] = [];
