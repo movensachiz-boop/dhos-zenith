@@ -161,9 +161,10 @@ export default function Dashboard() {
           value={`$${metrics.outstandingReceivables.toFixed(2)}`}
           icon={CreditCard}
         />
-        <MetricCard title="Round Payouts Received" value={`$${metrics.roundCashIn.toFixed(2)}`} icon={Users} variant="primary" />
-        <MetricCard title="Round Contributions Paid" value={`$${metrics.roundCashOut.toFixed(2)}`} icon={PiggyBank} />
-        <MetricCard title="Round Net Position" value={`$${(metrics.roundCashIn - metrics.roundCashOut).toFixed(2)}`} icon={TrendingUp} variant={metrics.roundCashIn - metrics.roundCashOut < 0 ? 'warning' : undefined} />
+        <MetricCard title="Round Payouts Received" value={`$${(metrics.roundCashIn ?? 0).toFixed(2)}`} icon={Users} variant="primary" />
+        <MetricCard title="Round Contributions Paid" value={`$${(metrics.roundCashOut ?? 0).toFixed(2)}`} icon={PiggyBank} />
+        <MetricCard title="Round Net Position" value={`$${((metrics.roundCashIn ?? 0) - (metrics.roundCashOut ?? 0)).toFixed(2)}`} icon={TrendingUp} variant={(metrics.roundCashIn ?? 0) - (metrics.roundCashOut ?? 0) < 0 ? 'warning' : undefined} />
+
       </div>
 
 
