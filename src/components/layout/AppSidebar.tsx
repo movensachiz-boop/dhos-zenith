@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
+import { branchName, clearBranch } from '@/lib/branch';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -62,8 +63,11 @@ export function AppSidebar() {
               <img src={logoAsset.url} alt="Maita Cakes logo" className="h-8 w-8 object-contain" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-sidebar-foreground">Maita Cakes</h1>
-              <p className="text-[10px] text-sidebar-foreground/60">Sweet moments on every bite</p>
+              <h1 className="text-sm font-bold text-sidebar-foreground">{branchName()}</h1>
+              <button
+                className="text-[10px] text-sidebar-foreground/60 hover:text-sidebar-foreground underline"
+                onClick={() => { clearBranch(); window.location.href = '/'; }}
+              >Switch account</button>
             </div>
           </div>
         )}

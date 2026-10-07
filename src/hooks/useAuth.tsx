@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { clearBranch } from '@/lib/branch';
 
 interface Profile {
   id: string;
@@ -96,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    clearBranch();
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
