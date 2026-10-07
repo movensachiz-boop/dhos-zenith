@@ -17,6 +17,7 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          branch: string
           created_at: string
           details: Json | null
           entity: string
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           action: string
+          branch?: string
           created_at?: string
           details?: Json | null
           entity: string
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           action?: string
+          branch?: string
           created_at?: string
           details?: Json | null
           entity?: string
@@ -49,16 +52,19 @@ export type Database = {
       }
       categories: {
         Row: {
+          branch: string
           created_at: string
           id: string
           name: string
         }
         Insert: {
+          branch?: string
           created_at?: string
           id?: string
           name: string
         }
         Update: {
+          branch?: string
           created_at?: string
           id?: string
           name?: string
@@ -68,6 +74,7 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
+          branch: string
           created_at: string
           credit_limit: number
           customer_number: string | null
@@ -83,6 +90,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch?: string
           created_at?: string
           credit_limit?: number
           customer_number?: string | null
@@ -98,6 +106,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch?: string
           created_at?: string
           credit_limit?: number
           customer_number?: string | null
@@ -116,6 +125,7 @@ export type Database = {
       expenses: {
         Row: {
           amount: number
+          branch: string
           category: string
           created_at: string
           created_by: string | null
@@ -130,6 +140,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          branch?: string
           category?: string
           created_at?: string
           created_by?: string | null
@@ -144,6 +155,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          branch?: string
           category?: string
           created_at?: string
           created_by?: string | null
@@ -161,6 +173,7 @@ export type Database = {
       injection_repayments: {
         Row: {
           amount: number
+          branch: string
           created_at: string
           created_by: string | null
           id: string
@@ -172,6 +185,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -183,6 +197,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -205,6 +220,7 @@ export type Database = {
       injections: {
         Row: {
           amount: number
+          branch: string
           created_at: string
           created_by: string | null
           currency: string
@@ -218,6 +234,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -231,6 +248,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -246,6 +264,7 @@ export type Database = {
       }
       money_rounds: {
         Row: {
+          branch: string
           created_at: string
           currency: string
           cycle_days: number
@@ -259,6 +278,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          branch?: string
           created_at?: string
           currency?: string
           cycle_days?: number
@@ -272,6 +292,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          branch?: string
           created_at?: string
           currency?: string
           cycle_days?: number
@@ -289,6 +310,7 @@ export type Database = {
       products: {
         Row: {
           barcode: string | null
+          branch: string
           category: string
           cost_price: number
           created_at: string
@@ -307,6 +329,7 @@ export type Database = {
         }
         Insert: {
           barcode?: string | null
+          branch?: string
           category?: string
           cost_price?: number
           created_at?: string
@@ -325,6 +348,7 @@ export type Database = {
         }
         Update: {
           barcode?: string | null
+          branch?: string
           category?: string
           cost_price?: number
           created_at?: string
@@ -377,6 +401,7 @@ export type Database = {
         Row: {
           amount_paid: number
           balance_due: number
+          branch: string
           created_at: string
           created_by: string | null
           customer_address: string | null
@@ -399,6 +424,7 @@ export type Database = {
         Insert: {
           amount_paid?: number
           balance_due?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           customer_address?: string | null
@@ -421,6 +447,7 @@ export type Database = {
         Update: {
           amount_paid?: number
           balance_due?: number
+          branch?: string
           created_at?: string
           created_by?: string | null
           customer_address?: string | null
@@ -445,6 +472,7 @@ export type Database = {
       round_entries: {
         Row: {
           amount: number
+          branch: string
           created_at: string
           direction: string
           id: string
@@ -458,6 +486,7 @@ export type Database = {
         }
         Insert: {
           amount?: number
+          branch?: string
           created_at?: string
           direction: string
           id?: string
@@ -471,6 +500,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          branch?: string
           created_at?: string
           direction?: string
           id?: string
@@ -501,6 +531,7 @@ export type Database = {
       }
       round_members: {
         Row: {
+          branch: string
           created_at: string
           id: string
           is_me: boolean
@@ -510,6 +541,7 @@ export type Database = {
           round_id: string
         }
         Insert: {
+          branch?: string
           created_at?: string
           id?: string
           is_me?: boolean
@@ -519,6 +551,7 @@ export type Database = {
           round_id: string
         }
         Update: {
+          branch?: string
           created_at?: string
           id?: string
           is_me?: boolean
@@ -539,6 +572,7 @@ export type Database = {
       }
       sale_items: {
         Row: {
+          branch: string
           created_at: string
           id: string
           line_total: number
@@ -551,6 +585,7 @@ export type Database = {
           vat_applicable: boolean
         }
         Insert: {
+          branch?: string
           created_at?: string
           id?: string
           line_total: number
@@ -563,6 +598,7 @@ export type Database = {
           vat_applicable?: boolean
         }
         Update: {
+          branch?: string
           created_at?: string
           id?: string
           line_total?: number
@@ -595,6 +631,7 @@ export type Database = {
         Row: {
           amount_paid: number
           balance_due: number
+          branch: string
           cashier_id: string | null
           cashier_name: string | null
           client_id: string | null
@@ -619,6 +656,7 @@ export type Database = {
         Insert: {
           amount_paid?: number
           balance_due?: number
+          branch?: string
           cashier_id?: string | null
           cashier_name?: string | null
           client_id?: string | null
@@ -643,6 +681,7 @@ export type Database = {
         Update: {
           amount_paid?: number
           balance_due?: number
+          branch?: string
           cashier_id?: string | null
           cashier_name?: string | null
           client_id?: string | null
@@ -677,6 +716,7 @@ export type Database = {
       settings: {
         Row: {
           address: string | null
+          branch: string
           currency: string
           id: string
           phone: string
@@ -687,6 +727,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch?: string
           currency?: string
           id?: string
           phone?: string
@@ -697,6 +738,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch?: string
           currency?: string
           id?: string
           phone?: string
@@ -709,6 +751,7 @@ export type Database = {
       }
       stock_movements: {
         Row: {
+          branch: string
           change: number
           created_at: string
           id: string
@@ -718,6 +761,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          branch?: string
           change: number
           created_at?: string
           id?: string
@@ -727,6 +771,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          branch?: string
           change?: number
           created_at?: string
           id?: string
@@ -748,6 +793,7 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          branch: string
           contact_person: string | null
           created_at: string
           email: string | null
@@ -758,6 +804,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          branch?: string
           contact_person?: string | null
           created_at?: string
           email?: string | null
@@ -768,6 +815,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          branch?: string
           contact_person?: string | null
           created_at?: string
           email?: string | null
@@ -780,6 +828,7 @@ export type Database = {
       }
       transporters: {
         Row: {
+          branch: string
           created_at: string
           driver_name: string | null
           id: string
@@ -790,6 +839,7 @@ export type Database = {
           vehicle_number: string | null
         }
         Insert: {
+          branch?: string
           created_at?: string
           driver_name?: string | null
           id?: string
@@ -800,6 +850,7 @@ export type Database = {
           vehicle_number?: string | null
         }
         Update: {
+          branch?: string
           created_at?: string
           driver_name?: string | null
           id?: string
@@ -834,6 +885,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_branch_data: { Args: never; Returns: undefined }
+      current_branch: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

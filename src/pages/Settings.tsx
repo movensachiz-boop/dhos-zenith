@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2, Save, Trash2 } from 'lucide-react';
+import { branchName } from '@/lib/branch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -36,6 +37,24 @@ export default function SettingsPage() {
   }, []);
 
   const update = (patch: Partial<Settings>) => setSettings(settings ? { ...settings, ...patch } : settings);
+  const [clearing, setClearing] = useState(false);
+
+  const clearAll = async () => {
+    if (!confirm(`Delete ALL data for ${branchName()}? This cannot be undone.`)) return;
+    if (prompt('Type CLEAR to confirm') !== 'CLEAR') return;
+    setClearing(true);
+    const { error } = await supabase.rpc('clear_branch_data' as never);
+    setClearing(false);
+    if (error) {
+      toast({ title: 'Could not clear data', description: error.message, variant: 'destructive' });
+      return;
+    }
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('mc_') && !['mc_branch', 'mc_logo_data_url', 'mc_settings_cache'].includes(k))
+      .forEach(k => localStorage.removeItem(k));
+    await logAudit('clear_all', 'system', branchName());
+    toast({ title: 'All data cleared' });
+  };
 
   const save = async () => {
     if (!settings) return;
@@ -95,6 +114,17 @@ export default function SettingsPage() {
       <div className="rounded-xl border bg-card p-6 space-y-2">
         <h2 className="font-semibold">Account</h2>
         <p className="text-sm text-muted-foreground">Signed in as {user?.email}</p>
+        <p className="text-sm text-muted-foreground">Business: {branchName()}</p>
+      </div>
+
+      <div className="rounded-xl border border-destructive/40 bg-card p-6 space-y-3">
+        <h2 className="font-semibold text-destructive">Clear everything</h2>
+        <p className="text-sm text-muted-foreground">
+          Permanently deletes all sales, products, stock, customers, quotations, money rounds, injections and expenses for {branchName()}. User accounts are kept.
+        </p>
+        <Button variant="destructive" onClick={clearAll} disabled={clearing}>
+          {clearing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Trash2 className="h-4 w-4 mr-2" />Clear everything</>}
+        </Button>
       </div>
     </div>
   );
