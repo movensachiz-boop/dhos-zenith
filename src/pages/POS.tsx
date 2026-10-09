@@ -218,10 +218,6 @@ export default function POS() {
       toast({ title: 'Customer name required', description: 'Enter the client name to continue', variant: 'destructive' });
       return;
     }
-    if (!customerPhone.trim()) {
-      toast({ title: 'Contact required', description: 'Enter the customer phone/contact to continue', variant: 'destructive' });
-      return;
-    }
     setCustomerOpen(false);
     setTimeout(() => setConfirmOpen(true), 120);
   };
@@ -670,7 +666,7 @@ export default function POS() {
               <Input ref={nameRef} value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Contact (phone) *</label>
+              <label className="text-sm font-medium">Contact (phone)</label>
               <Input
                 placeholder="e.g. 0785029019"
                 value={customerPhone}
