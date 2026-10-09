@@ -57,7 +57,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // Keep the login fresh: phones/tablets pause background timers, so the
+    // access token can expire ("JWT expired"). Refresh on focus and periodically.
+    const keepFresh = async () => {
+      if (!navigator.onLine) return;
+      const { data: { session: s } } = await supabase.auth.getSession();
+      if (!s) return;
+      const msLeft = (s.expires_at ?? 0) * 1000 - Date.now();
+      if (msLeft < 5 * 60 * 1000) await supabase.auth.refreshSession();
+    };
+    const onVis = () => { if (document.visibilityState === 'visible') keepFresh(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('focus', keepFresh);
+    window.addEventListener('online', keepFresh);
+    const timer = setInterval(keepFresh, 60 * 1000);
+    keepFresh();
+
+    return () => {
+      subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('focus', keepFresh);
+      window.removeEventListener('online', keepFresh);
+      clearInterval(timer);
+    };
   }, []);
 
   const fetchProfile = async (userId: string) => {
