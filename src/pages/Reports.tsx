@@ -133,6 +133,30 @@ export default function Reports() {
     return expenses.filter(e => new Date(e.paid_on) >= start).reduce((s, e) => s + Number(e.amount), 0);
   }, [expenses, range]);
 
+  const fastMovers = useMemo(() => {
+    const weekAgo = Date.now() - 7 * 86400000;
+    const twoWeeks = Date.now() - 14 * 86400000;
+    const live = new Set(sales.filter(s => s.status !== 'voided').map(s => s.id));
+    const saleDate = new Map(sales.map(s => [s.id, new Date(s.created_at).getTime()]));
+    const acc = new Map<string, { name: string; id: string | null; week: number; prev: number }>();
+    items.forEach(i => {
+      if (!live.has(i.sale_id)) return;
+      const t = saleDate.get(i.sale_id) ?? 0;
+      if (t < twoWeeks) return;
+      const k = i.product_id ?? i.product_name;
+      const row = acc.get(k) ?? { name: i.product_name, id: i.product_id, week: 0, prev: 0 };
+      if (t >= weekAgo) row.week += Number(i.quantity); else row.prev += Number(i.quantity);
+      acc.set(k, row);
+    });
+    const byId = new Map(products.map(p => [p.id, p]));
+    return [...acc.values()].filter(r => r.week > 0).sort((a, b) => b.week - a.week).slice(0, 10).map(r => {
+      const p = r.id ? byId.get(r.id) : undefined;
+      const stock = p?.stockTrackingEnabled ? p.currentStock : null;
+      const suggest = Math.max(0, Math.ceil(r.week * 1.2) - (stock ?? 0));
+      return { ...r, stock, suggest, trend: r.week - r.prev };
+    });
+  }, [items, sales, products]);
+
   const debt = useMemo(() => {
     const injected = injections.reduce((s, i) => s + Number(i.amount), 0);
     const repaid = injRepayments.reduce((s, r) => s + Number(r.amount), 0);
@@ -195,6 +219,30 @@ export default function Reports() {
             <Stat label="Transactions" value={String(totals.count)} />
             <Stat label="Average sale" value={`$${totals.avg.toFixed(2)}`} />
             <Stat label="Bills paid" value={`$${periodExpenses.toFixed(2)}`} />
+          </div>
+
+          <div className="rounded-xl border bg-card p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Fast-moving products (last 7 days) & restock advice</h2>
+            {fastMovers.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">No sales in the last 7 days.</p>
+            ) : (
+              <div className="mt-3 overflow-x-auto">
+                <table className="data-table min-w-[560px]">
+                  <thead><tr><th>Product</th><th className="text-right">Sold this week</th><th className="text-right">vs last week</th><th className="text-right">In stock</th><th>Advice</th></tr></thead>
+                  <tbody>
+                    {fastMovers.map(r => (
+                      <tr key={r.name}>
+                        <td className="font-medium">{r.name}</td>
+                        <td className="text-right tabular-nums">{r.week}</td>
+                        <td className="text-right tabular-nums">{r.trend > 0 ? `+${r.trend}` : r.trend}</td>
+                        <td className="text-right tabular-nums">{r.stock ?? '—'}</td>
+                        <td className="text-sm">{r.suggest > 0 ? <span className="font-semibold text-primary">Add {r.suggest} to stock</span> : 'Stock is enough for next week'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border bg-card p-4">
