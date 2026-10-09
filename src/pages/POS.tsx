@@ -218,10 +218,6 @@ export default function POS() {
       toast({ title: 'Customer name required', description: 'Enter the client name to continue', variant: 'destructive' });
       return;
     }
-    if (!customerPhone.trim()) {
-      toast({ title: 'Contact required', description: 'Enter the customer phone/contact to continue', variant: 'destructive' });
-      return;
-    }
     setCustomerOpen(false);
     setTimeout(() => setConfirmOpen(true), 120);
   };
