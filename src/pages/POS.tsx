@@ -666,7 +666,7 @@ export default function POS() {
               <Input ref={nameRef} value={customerName} onChange={e => setCustomerName(e.target.value)} className="h-11" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Contact (phone) *</label>
+              <label className="text-sm font-medium">Contact (phone)</label>
               <Input
                 placeholder="e.g. 0785029019"
                 value={customerPhone}
