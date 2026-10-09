@@ -1,6 +1,7 @@
 import { 
   LayoutDashboard, 
-  ShoppingCart, 
+  ShoppingCart,
+  ScanLine,
   Package, 
   Users, 
   Truck, 
@@ -38,6 +39,7 @@ const navigation = [
   { name: 'Money Round', href: '/money-round', icon: PiggyBank },
   { name: 'Money Injection', href: '/injections', icon: Banknote },
   { name: 'Bills & Expenses', href: '/bills', icon: ReceiptText },
+  { name: 'Scan Sales Sheets', href: '/scan-sales', icon: ScanLine },
   { name: 'Audit Logs', href: '/audit', icon: Shield },
   { name: 'Users', href: '/users', icon: UserCog },
   { name: 'Settings', href: '/settings', icon: Settings },

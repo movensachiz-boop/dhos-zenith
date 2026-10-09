@@ -25,6 +25,7 @@ import Bills from "./pages/Bills";
 import Auth from "./pages/Auth";
 import UsersPage from "./pages/Users";
 import Injections from "./pages/Injections";
+import ScanSales from "./pages/ScanSales";
 
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -76,6 +77,7 @@ const AppRoutes = () => {
       <Route path="/users" element={<ProtectedRoute><AppLayout><UsersPage /></AppLayout></ProtectedRoute>} />
       <Route path="/injections" element={<ProtectedRoute><AppLayout><Injections /></AppLayout></ProtectedRoute>} />
       <Route path="/bills" element={<ProtectedRoute><AppLayout><Bills /></AppLayout></ProtectedRoute>} />
+      <Route path="/scan-sales" element={<ProtectedRoute><AppLayout><ScanSales /></AppLayout></ProtectedRoute>} />
 
 
       <Route path="/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
