@@ -52,7 +52,7 @@ export default function Products() {
 
   const handleAddProduct = async (newProduct: Product) => {
     const { data: auth } = await supabase.auth.getUser();
-    const { error } = await supabase.from('products').insert({
+    const { error } = await withFreshSession(() => supabase.from('products').insert({
       name: newProduct.name,
       sku: newProduct.sku,
       barcode: newProduct.barcode ?? null,
