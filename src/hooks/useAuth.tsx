@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { session: s } } = await supabase.auth.getSession();
       if (!s) return;
       const msLeft = (s.expires_at ?? 0) * 1000 - Date.now();
-      if (msLeft < 5 * 60 * 1000) await supabase.auth.refreshSession();
+      if (msLeft < 15 * 60 * 1000) await supabase.auth.refreshSession();
     };
     const onVis = () => { if (document.visibilityState === 'visible') keepFresh(); };
     document.addEventListener('visibilitychange', onVis);
