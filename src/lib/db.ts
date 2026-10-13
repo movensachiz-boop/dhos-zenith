@@ -50,13 +50,14 @@ export async function ensureFreshSession(): Promise<void> {
 }
 
 // Run a request; if it fails because the token expired, refresh once and retry.
-export async function withFreshSession<T>(fn: () => Promise<T>): Promise<T> {
+export async function withFreshSession<T extends { error?: { message?: string } | null }>(
+  fn: () => PromiseLike<T>,
+): Promise<T> {
   await ensureFreshSession();
-  const result = await fn();
-  const err = (result as { error?: { message?: string } | null })?.error;
-  if (err?.message && /jwt expired|token expired|invalid jwt/i.test(err.message)) {
+  let result = await fn();
+  if (result?.error?.message && /jwt expired|token expired|invalid jwt/i.test(result.error.message)) {
     await supabase.auth.refreshSession();
-    return fn();
+    result = await fn();
   }
   return result;
 }
