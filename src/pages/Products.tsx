@@ -13,7 +13,7 @@ import { Product, Category } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import AddProductDialog from '@/components/products/AddProductDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchProducts, logAudit } from '@/lib/db';
+import { fetchProducts, logAudit, withFreshSession } from '@/lib/db';
 import { useCachedState, isOffline } from '@/lib/cache';
 
 export default function Products() {
@@ -66,7 +66,7 @@ export default function Products() {
       current_stock: newProduct.currentStock,
       low_stock_threshold: newProduct.lowStockThreshold,
       created_by: auth.user?.id ?? null,
-    });
+    }));
     if (error) {
       toast({ title: 'Could not save product', description: error.message, variant: 'destructive' });
       return;
@@ -77,7 +77,7 @@ export default function Products() {
   };
 
   const handleDeleteProduct = async (product: Product) => {
-    const { error } = await supabase.from('products').delete().eq('id', product.id);
+    const { error } = await withFreshSession(() => supabase.from('products').delete().eq('id', product.id));
     if (error) {
       toast({ title: 'Could not delete', description: error.message, variant: 'destructive' });
       return;
