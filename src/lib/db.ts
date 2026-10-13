@@ -37,6 +37,30 @@ export const rowToProduct = (r: ProductRow): Product => ({
   updatedAt: new Date(r.updated_at),
 });
 
+// Renew the login token before it expires so saves never fail with "JWT expired".
+export async function ensureFreshSession(): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const msLeft = (session.expires_at ?? 0) * 1000 - Date.now();
+    if (msLeft < 15 * 60 * 1000) await supabase.auth.refreshSession();
+  } catch {
+    // offline or refresh failed — let the actual request surface the error
+  }
+}
+
+// Run a request; if it fails because the token expired, refresh once and retry.
+export async function withFreshSession<T>(fn: () => Promise<T>): Promise<T> {
+  await ensureFreshSession();
+  const result = await fn();
+  const err = (result as { error?: { message?: string } | null })?.error;
+  if (err?.message && /jwt expired|token expired|invalid jwt/i.test(err.message)) {
+    await supabase.auth.refreshSession();
+    return fn();
+  }
+  return result;
+}
+
 export async function fetchProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
