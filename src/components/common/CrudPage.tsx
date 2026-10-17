@@ -97,7 +97,7 @@ export default function CrudPage({ table, title, subtitle, fields, searchKeys }:
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-muted-foreground">{subtitle}</p>
@@ -150,7 +150,7 @@ export default function CrudPage({ table, title, subtitle, fields, searchKeys }:
           <DialogHeader>
             <DialogTitle>Add {title.replace(/s$/, '')}</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {fields.map(f => (
               <div key={f.key} className="space-y-1.5">
                 <label className="text-sm font-medium">
