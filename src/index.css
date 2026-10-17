@@ -228,6 +228,8 @@
     .app-main .metric-card { padding: 0.75rem; }
     .app-main .metric-card p { overflow-wrap: anywhere; }
     input, select, textarea { font-size: 16px; }
+    .app-main button { max-width: 100%; }
+    .app-main button:not([aria-haspopup]) { white-space: normal; }
   }
 
   .text-balance {

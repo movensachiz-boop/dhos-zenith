@@ -1,2 +1,3 @@
-- [ ] Adapt shared navigation and page layouts for Android phone widths.
-- [ ] Verify phone navigation and main pages with a signed-in session.
+- [x] Adapt shared navigation and page layouts for Android phone widths.
+- [x] Verify login and sign-up fit at 360px, 412px, and desktop widths.
+- [ ] Verify signed-in phone navigation and main pages — blocked: requesting user has no matching account; preview sign-in is needed.

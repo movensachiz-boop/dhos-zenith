@@ -179,7 +179,7 @@ export default function Dashboard() {
 
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table w-full">
+            <table className="data-table w-full min-w-[640px]">
               <thead>
                 <tr><th>Order</th><th>Customer</th><th>Deadline</th><th>Countdown</th><th className="text-right">Order total</th><th className="text-right">Paid</th><th className="text-right">Balance</th></tr>
               </thead>
