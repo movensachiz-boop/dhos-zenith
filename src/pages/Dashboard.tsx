@@ -59,7 +59,10 @@ export default function Dashboard() {
   const [upfronts, setUpfronts] = useCachedState<UpfrontOrder[]>('mc_dashboard_upfronts', []);
 
   useEffect(() => {
-    (async () => {
+    let active = true;
+    let request = 0;
+    const load = async () => {
+      const current = ++request;
       if (isOffline()) return;
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
@@ -71,6 +74,8 @@ export default function Dashboard() {
         supabase.from('transporters').select('status'),
         supabase.from('round_entries').select('direction, amount'),
       ]);
+
+      if (!active || current !== request || salesRes.error) return;
 
       const sales = (salesRes.data ?? []).filter(s => s.status !== 'voided');
       const todays = sales.filter(s => new Date(s.created_at) >= startOfDay);
@@ -130,7 +135,26 @@ export default function Dashboard() {
           currency: 'USD',
         }))
       );
-    })();
+    };
+    void load();
+    const onVisible = () => { if (document.visibilityState === 'visible') void load(); };
+    const onChange = () => { void load(); };
+    window.addEventListener('focus', onChange);
+    window.addEventListener('online', onChange);
+    window.addEventListener('mc-payments-changed', onChange);
+    document.addEventListener('visibilitychange', onVisible);
+    const channel = supabase.channel('dashboard-payments')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, onChange)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'quotations' }, onChange)
+      .subscribe();
+    return () => {
+      active = false;
+      window.removeEventListener('focus', onChange);
+      window.removeEventListener('online', onChange);
+      window.removeEventListener('mc-payments-changed', onChange);
+      document.removeEventListener('visibilitychange', onVisible);
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   return (

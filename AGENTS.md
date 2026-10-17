@@ -1,2 +1,4 @@
 # Architecture rules
 - Keep navigation responsive in the shared AppLayout: a controlled desktop sidebar and a dismissible mobile drawer share the same links, so page navigation stays consistent across screen sizes.
+- Synchronize upfront document and sale deletions transactionally with invoker database triggers matched by document number and branch, so either deletion entry point removes the linked financial record without bypassing RLS.
+- Invalidate payment caches after deletion and refresh Dashboard on payment events, focus, reconnection and live changes, so deleted payments cannot survive in stale totals.
