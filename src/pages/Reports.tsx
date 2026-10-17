@@ -75,9 +75,11 @@ export default function Reports() {
     const onFocus = () => load();
     const onVisible = () => { if (document.visibilityState === 'visible') load(); };
     window.addEventListener('focus', onFocus);
+    window.addEventListener('mc-payments-changed', onFocus);
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener('mc-payments-changed', onFocus);
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [load]);
