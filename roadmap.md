@@ -1,3 +1,4 @@
 - [x] Adapt shared navigation and page layouts for Android phone widths.
+- [ ] Remove deleted upfront payments from linked sales and refresh dashboard totals; test deletion synchronization.
 - [x] Verify login and sign-up fit at 360px, 412px, and desktop widths.
 - [ ] Verify signed-in phone navigation and main pages — blocked: requesting user has no matching account; preview sign-in is needed.
