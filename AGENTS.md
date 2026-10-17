@@ -1,0 +1,2 @@
+# Architecture rules
+- Keep navigation responsive in the shared AppLayout: a controlled desktop sidebar and a dismissible mobile drawer share the same links, so page navigation stays consistent across screen sizes.

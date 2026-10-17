@@ -1,0 +1,2 @@
+- [ ] Adapt shared navigation and page layouts for Android phone widths.
+- [ ] Verify phone navigation and main pages with a signed-in session.
