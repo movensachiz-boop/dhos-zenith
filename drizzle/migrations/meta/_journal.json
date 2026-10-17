@@ -8,6 +8,13 @@
       "when": 1791355161114,
       "tag": "0000_branches",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792257733229,
+      "tag": "0001_synchronize_upfront_deletions",
+      "breakpoints": true
     }
   ]
 }

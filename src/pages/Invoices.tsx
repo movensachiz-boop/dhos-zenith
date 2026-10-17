@@ -11,7 +11,7 @@ import { useRef } from 'react';
 import { printReceiptHtml } from '@/lib/receiptPrint';
 import { downloadReceiptPdf } from '@/lib/receiptPdf';
 import { logAudit } from '@/lib/db';
-import { useCachedState, isOffline } from '@/lib/cache';
+import { useCachedState, isOffline, invalidatePaymentCaches } from '@/lib/cache';
 
 type Sale = {
   id: string;
@@ -81,6 +81,7 @@ export default function Invoices() {
       return;
     }
     toast({ title: `${sale.receipt_number} voided` });
+    invalidatePaymentCaches();
     load();
   };
 
@@ -98,6 +99,7 @@ export default function Invoices() {
       return;
     }
     await logAudit('delete', 'sales', sale.id, { receipt_number: sale.receipt_number, total: sale.total });
+    invalidatePaymentCaches();
     toast({ title: `${sale.receipt_number} deleted` });
     setSales(sales.filter(x => x.id !== sale.id));
   };

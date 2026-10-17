@@ -62,3 +62,14 @@ export function useCachedState<T>(key: string, fallback: T): [T, (value: T) => v
 }
 
 export const isOffline = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+
+/** Financial views must not rehydrate a deleted payment while offline. */
+export function invalidatePaymentCaches() {
+  [
+    'mc_dashboard_metrics', 'mc_dashboard_recent', 'mc_dashboard_upfronts',
+    'mc_sales_cache', 'mc_sale_items_cache', 'mc_quotations_cache',
+  ].forEach(key => {
+    try { localStorage.removeItem(key); } catch { /* storage unavailable */ }
+  });
+  window.dispatchEvent(new Event('mc-payments-changed'));
+}

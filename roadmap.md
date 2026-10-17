@@ -1,3 +1,5 @@
 - [x] Adapt shared navigation and page layouts for Android phone widths.
+- [x] Remove orphaned upfront payment; synchronize deletions and refresh dashboard totals; cache and database regression tests passed.
+- [ ] Verify upfront deletion through signed-in pages — blocked: no matching requesting-user account; preview sign-in is needed.
 - [x] Verify login and sign-up fit at 360px, 412px, and desktop widths.
 - [ ] Verify signed-in phone navigation and main pages — blocked: requesting user has no matching account; preview sign-in is needed.

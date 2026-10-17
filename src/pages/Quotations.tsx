@@ -7,9 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
-import { useCachedState, isOffline } from '@/lib/cache';
+import { useCachedState, isOffline, invalidatePaymentCaches } from '@/lib/cache';
 import { useCachedLogo } from '@/lib/offline';
-import { fetchProducts } from '@/lib/db';
+import { fetchProducts, logAudit, withFreshSession } from '@/lib/db';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types';
 import { STORE_INFO } from '@/components/pos/ThermalReceipt';
@@ -335,8 +335,14 @@ export default function Quotations() {
   };
 
   const remove = async (doc: SavedDoc) => {
-    const { error } = await supabase.from('quotations').delete().eq('id', doc.id);
+    if (!window.confirm(`Delete ${doc.doc_number} permanently? Its upfront payment will also be removed from the dashboard and reports.`)) return;
+    const { error } = await withFreshSession(() => supabase.from('quotations').delete().eq('id', doc.id));
     if (error) return toast({ title: 'Could not delete', description: error.message, variant: 'destructive' });
+    invalidatePaymentCaches();
+    setSaved(saved.filter(item => item.id !== doc.id));
+    if (editingId === doc.id) cancelEdit();
+    await logAudit('delete', 'quotations', doc.id, { doc_number: doc.doc_number, doc_type: doc.doc_type });
+    toast({ title: `${doc.doc_number} deleted` });
     loadSaved();
   };
 
