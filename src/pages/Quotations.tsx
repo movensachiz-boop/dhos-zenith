@@ -398,21 +398,23 @@ export default function Quotations() {
             {lines.map(l => (
               <div key={l.id} className="grid grid-cols-12 gap-2 items-center">
                 <Input
-                  className="col-span-6"
+                  className="col-span-12 sm:col-span-6"
                   list="product-options"
                   placeholder="Product / description"
                   value={l.description}
                   onChange={e => pickProduct(l.id, e.target.value)}
                 />
                 <Input
-                  className="col-span-2"
+                  className="col-span-4 sm:col-span-2"
+                  aria-label="Quantity"
                   type="number"
                   min={1}
                   value={l.quantity}
                   onChange={e => update(l.id, { quantity: Number(e.target.value) })}
                 />
                 <Input
-                  className="col-span-3"
+                  className="col-span-6 sm:col-span-3"
+                  aria-label="Unit price"
                   type="number"
                   step="0.01"
                   value={l.unitPrice}
@@ -421,7 +423,8 @@ export default function Quotations() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="col-span-1 text-destructive"
+                  className="col-span-2 sm:col-span-1 text-destructive"
+                  aria-label="Remove item"
                   onClick={() => setLines(ls => (ls.length > 1 ? ls.filter(x => x.id !== l.id) : ls))}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -511,7 +514,7 @@ export default function Quotations() {
           <p className="p-10 text-center text-muted-foreground">No documents generated yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table w-full">
+            <table className="data-table w-full min-w-[640px]">
               <thead>
                 <tr><th>Document</th><th>Type</th><th>Customer</th><th>Date</th><th className="text-right">Total</th><th className="text-right">Balance</th><th>Deadline</th><th></th></tr>
               </thead>

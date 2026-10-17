@@ -424,9 +424,9 @@ export default function POS() {
   ];
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-6 animate-fade-in">
+    <div className="flex flex-col gap-4 xl:h-[calc(100dvh-7rem)] xl:flex-row xl:gap-6 animate-fade-in">
       {/* Products Section */}
-      <div className="flex-1 flex flex-col">
+      <div className="min-w-0 flex-1 flex flex-col">
         <div className="space-y-4 mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -449,7 +449,7 @@ export default function POS() {
               </span>
             )}
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 [&>button]:shrink-0">
             <Button
               variant={selectedCategory === null ? 'default' : 'outline'}
               size="sm"
@@ -470,7 +470,7 @@ export default function POS() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="max-h-[50dvh] flex-1 overflow-y-auto xl:max-h-none">
           {loading ? (
             <div className="flex items-center justify-center p-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -478,7 +478,7 @@ export default function POS() {
           ) : filteredProducts.length === 0 ? (
             <p className="p-12 text-center text-muted-foreground">No products found.</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
               {filteredProducts.map((product, index) => (
                 <button
                   key={product.id}
@@ -511,7 +511,7 @@ export default function POS() {
       </div>
 
       {/* Cart Section */}
-      <div className="w-96 flex flex-col bg-card rounded-xl border">
+      <div className="w-full min-w-0 shrink-0 flex flex-col bg-card rounded-xl border xl:w-96">
         <div className="p-4 border-b space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Current {docType === 'order' ? 'Order' : 'Sale'}</h2>
@@ -543,8 +543,8 @@ export default function POS() {
           ) : (
             <div className="space-y-3">
               {cart.map(item => (
-                <div key={item.product.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  <div className="flex-1 min-w-0">
+                <div key={item.product.id} className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-muted/50">
+                  <div className="w-full min-w-0 sm:w-auto sm:flex-1">
                     <p className="font-medium text-sm truncate">{item.product.name}</p>
                     <p className="text-xs text-muted-foreground">
                       ${item.product.sellingPrice.toFixed(2)} each

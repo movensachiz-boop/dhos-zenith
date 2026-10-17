@@ -21,7 +21,6 @@ import {
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import logoAsset from '@/assets/maita-cakes-logo.png.asset.json';
 import { branchName, clearBranch } from '@/lib/branch';
 
@@ -46,19 +45,26 @@ const navigation = [
   { name: 'Help', href: '/help', icon: HelpCircle },
 ];
 
-export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface AppSidebarProps {
+  mobile?: boolean;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  onNavigate?: () => void;
+}
+
+export function AppSidebar({ mobile = false, collapsed = false, onToggle, onNavigate }: AppSidebarProps) {
   const location = useLocation();
 
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col",
-        collapsed ? "w-16" : "w-64"
+        "bg-sidebar border-r border-sidebar-border transition-all duration-300 flex-col",
+        mobile ? "flex h-full w-full" : "fixed left-0 top-0 z-40 hidden h-dvh lg:flex",
+        !mobile && (collapsed ? "w-16" : "w-64")
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
+       <div className="flex h-16 shrink-0 items-center justify-between px-4 pr-10 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-background">
@@ -66,10 +72,10 @@ export function AppSidebar() {
             </div>
             <div>
               <h1 className="text-sm font-bold text-sidebar-foreground">{branchName()}</h1>
-              <button
-                className="text-[10px] text-sidebar-foreground/60 hover:text-sidebar-foreground underline"
+               <Button variant="link"
+                 className="h-auto p-0 text-[10px] text-sidebar-foreground/60 hover:text-sidebar-foreground underline"
                 onClick={() => { clearBranch(); window.location.href = '/'; }}
-              >Switch account</button>
+               >Switch account</Button>
             </div>
           </div>
         )}
@@ -89,6 +95,8 @@ export function AppSidebar() {
               <li key={item.name}>
                 <NavLink
                   to={item.href}
+                   onClick={onNavigate}
+                   title={collapsed ? item.name : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
                     isActive 
@@ -106,16 +114,17 @@ export function AppSidebar() {
       </nav>
 
       {/* Collapse Toggle */}
-      <div className="border-t border-sidebar-border p-2">
+       {!mobile && <div className="border-t border-sidebar-border p-2">
         <Button
           variant="ghost"
           size="sm"
           className="w-full justify-center text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          onClick={() => setCollapsed(!collapsed)}
+           onClick={onToggle}
+           aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
-      </div>
+       </div>}
     </aside>
   );
 }

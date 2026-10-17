@@ -7,7 +7,6 @@
    Style: Enterprise POS, High Contrast, Minimalist
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -220,6 +219,19 @@
 }
 
 @layer utilities {
+  @media (max-width: 639px) {
+    .app-main > * { min-width: 0; max-width: 100%; }
+    .app-main > * > .flex.items-center.justify-between {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .app-main .metric-card { padding: 0.75rem; }
+    .app-main .metric-card p { overflow-wrap: anywhere; }
+    input, select, textarea { font-size: 16px; }
+    .app-main button { max-width: 100%; }
+    .app-main button:not([aria-haspopup]) { white-space: normal; }
+  }
+
   .text-balance {
     text-wrap: balance;
   }

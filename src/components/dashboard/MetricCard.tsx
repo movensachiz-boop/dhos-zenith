@@ -22,13 +22,13 @@ export function MetricCard({
   variant = 'default' 
 }: MetricCardProps) {
   return (
-    <div className="group relative overflow-hidden rounded-lg border bg-card p-4 transition-colors hover:border-primary/40">
-      <div className="flex items-start justify-between gap-3">
+    <div className="group relative min-w-0 overflow-hidden rounded-lg border bg-card p-3 sm:p-4 transition-colors hover:border-primary/40">
+      <div className="flex flex-col-reverse sm:flex-row items-start justify-between gap-2 sm:gap-3">
         <div className="min-w-0">
-          <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
-          <p className="mt-1.5 truncate text-2xl font-semibold tracking-tight">{value}</p>
+          <p className="break-words text-xs font-medium uppercase text-muted-foreground">{title}</p>
+          <p className="mt-1.5 break-all text-xl sm:text-2xl font-semibold">{value}</p>
           {subtitle && (
-            <p className="mt-1 truncate text-xs text-muted-foreground">{subtitle}</p>
+            <p className="mt-1 break-words text-xs text-muted-foreground">{subtitle}</p>
           )}
           {trend && (
             <div className={cn(
