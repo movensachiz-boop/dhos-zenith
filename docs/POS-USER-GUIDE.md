@@ -254,7 +254,7 @@ For technical support or system issues:
 | Contact | Details |
 |---------|---------|
 | 📧 Email | support@dataplexsoftwares.com |
-| 📞 Phone | +263 XX XXX XXXX |
+| 📞 Phone | +263 786133259 |
 | 🌐 Website | www.dataplexsoftwares.com |
 
 ---
